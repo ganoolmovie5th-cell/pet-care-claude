@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import authRoutes from './routes/auth';
 
 dotenv.config();
 
@@ -17,9 +18,8 @@ app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// TODO: Mount routes
-// import authRoutes from './routes/auth';
-// app.use('/auth', authRoutes);
+// Auth routes
+app.use('/auth', authRoutes);
 
 // Global error handler
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
