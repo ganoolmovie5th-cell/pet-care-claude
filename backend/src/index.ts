@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import vetsRoutes from './routes/vets';
+import bookingsRoutes from './routes/bookings';
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ app.get('/health', (_req: Request, res: Response) => {
 // Routes
 app.use('/auth', authRoutes);
 app.use('/vets', vetsRoutes);
+app.use('/bookings', bookingsRoutes);
 
 // Global error handler
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
