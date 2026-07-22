@@ -1,0 +1,57 @@
+:root {
+  --brand-primary: #0f5c4a;
+  --brand-dark: #0a4537;
+  --brand-light: #e4efe9;
+  --accent: #ff6b35;
+  --accent-dark: #cf6321;
+  --bg: #faf6ee;
+  --surface: #ffffff;
+  --text-primary: #1b2420;
+  --text-muted: #5d6b63;
+  --border: #e6ddcd;
+  --shadow-sm: 0 1px 2px rgba(27, 36, 32, 0.06);
+  --shadow-md: 0 8px 24px rgba(15, 92, 74, 0.1);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --font: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  color: var(--text-primary);
+  background: var(--bg);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+}
