@@ -76,3 +76,57 @@ export async function getInvoiceByBookingId(bookingId: string): Promise<PaymentI
   if (snapshot.empty) return null;
   return snapshot.docs[0].data() as PaymentInvoice;
 }
+
+export interface RecurringInvoice {
+  id: string;
+  externalId: string;
+  amount: number;
+  payerEmail: string;
+  description: string;
+  nextBillingDate: string;
+  status: 'ACTIVE' | 'INACTIVE';
+}
+
+export async function createRecurringInvoice(
+  externalId: string,
+  amount: number,
+  payerEmail: string,
+  description: string,
+  invoiceExpiry: number,
+  intervalCount: number
+): Promise<RecurringInvoice> {
+  const xenditResponse = await axios.post(
+    `${xenditBaseUrl}/recurring_invoices`,
+    {
+      external_id: externalId,
+      payer_email: payerEmail,
+      description,
+      amount,
+      currency: 'IDR',
+      interval: 'MONTH',
+      interval_count: intervalCount,
+      invoice_expiry: invoiceExpiry,
+    },
+    {
+      auth: {
+        username: xenditApiKey,
+        password: '',
+      },
+    }
+  );
+
+  const nextBillingDate = new Date();
+  nextBillingDate.setMonth(nextBillingDate.getMonth() + intervalCount);
+
+  const recurringInvoice: RecurringInvoice = {
+    id: xenditResponse.data.id,
+    externalId,
+    amount,
+    payerEmail,
+    description,
+    nextBillingDate: nextBillingDate.toISOString(),
+    status: 'ACTIVE',
+  };
+
+  return recurringInvoice;
+}

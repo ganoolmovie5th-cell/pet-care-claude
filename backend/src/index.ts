@@ -9,6 +9,7 @@ import playdateRoutes from './routes/playdate';
 import chatRoutes from './routes/chat';
 import paymentsRoutes from './routes/payments';
 import analyticsRoutes from './routes/analytics';
+import adminRoutes from './routes/admin';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -32,6 +33,7 @@ app.use('/playdate', playdateRoutes);
 app.use('/chat', chatRoutes);
 app.use('/payments', paymentsRoutes);
 app.use('/analytics', analyticsRoutes);
+app.use('/admin/vet', adminRoutes);
 
 app.use(errorHandler);
 
@@ -39,8 +41,10 @@ app.use((_req: Request, res: Response) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
 export default app;
