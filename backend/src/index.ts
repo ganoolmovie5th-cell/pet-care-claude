@@ -11,6 +11,7 @@ import paymentsRoutes from './routes/payments';
 import analyticsRoutes from './routes/analytics';
 import adminRoutes from './routes/admin';
 import vetRoutes from './routes/vet';
+import emailRoutes from './routes/email';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -36,6 +37,7 @@ app.use('/payments', paymentsRoutes);
 app.use('/analytics', analyticsRoutes);
 app.use('/admin/vet', adminRoutes);
 app.use('/vet', vetRoutes);
+app.use('/email', emailRoutes);
 
 app.use(errorHandler);
 

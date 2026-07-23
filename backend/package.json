@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@google-cloud/tasks": "^6.2.3",
+    "@sendgrid/mail": "^8.1.6",
     "axios": "^1.6.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.0",
