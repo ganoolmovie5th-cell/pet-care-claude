@@ -8,6 +8,8 @@ import healthRoutes from './routes/health';
 import playdateRoutes from './routes/playdate';
 import chatRoutes from './routes/chat';
 import paymentsRoutes from './routes/payments';
+import analyticsRoutes from './routes/analytics';
+import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
 
@@ -29,14 +31,9 @@ app.use('/health', healthRoutes);
 app.use('/playdate', playdateRoutes);
 app.use('/chat', chatRoutes);
 app.use('/payments', paymentsRoutes);
+app.use('/analytics', analyticsRoutes);
 
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('Error:', err.message);
-  res.status(500).json({
-    error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined,
-  });
-});
+app.use(errorHandler);
 
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ error: 'Route not found' });
