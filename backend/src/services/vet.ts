@@ -19,8 +19,25 @@ export interface Vet {
   review_count: number;
   consultation_fee: number;
   phone: string;
+  email?: string;
+  status: 'pending' | 'approved' | 'blocked';
+  subscription_id?: string | null;
+  subscription_status?: 'pending' | 'active' | 'overdue' | 'cancelled';
+  approved_at?: string | null;
   created_at: string;
 }
+
+export const createVet = async (data: Omit<Vet, 'id' | 'created_at'>): Promise<Vet> => {
+  const vetData = {
+    ...data,
+    status: 'pending',
+    subscription_id: null,
+    subscription_status: 'pending',
+    created_at: new Date().toISOString(),
+  };
+  const docRef = await db.collection('vets').add(vetData);
+  return { id: docRef.id, ...vetData } as Vet;
+};
 
 export const getAllVets = async (): Promise<Vet[]> => {
   const snapshot = await db.collection('vets').get();

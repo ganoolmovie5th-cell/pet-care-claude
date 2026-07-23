@@ -1,5 +1,6 @@
 import express, { Router, Request, Response } from 'express';
 import { auth } from '../config/firebase';
+import { createOrUpdateUser } from '../services/user';
 
 const router: Router = express.Router();
 
@@ -33,6 +34,12 @@ router.post('/verify-token', async (req: Request, res: Response) => {
     const decodedToken = await auth.verifyIdToken(idToken);
     const userId = decodedToken.uid;
 
+    // Ensure user doc exists with flagged field
+    await createOrUpdateUser(userId, {
+      uid: userId,
+      flagged: false,
+    });
+
     const jwt = generateJWT(userId);
 
     return res.json({
@@ -42,8 +49,8 @@ router.post('/verify-token', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Token verification error:', error);
-    return res.status(401).json({ 
-      error: 'Invalid token', 
+    return res.status(401).json({
+      error: 'Invalid token',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

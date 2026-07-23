@@ -1,7 +1,33 @@
 import express, { Router, Request, Response } from 'express';
-import { getAllVets, getVetById, searchVets } from '../services/vet';
+import { createVet, getAllVets, getVetById, searchVets } from '../services/vet';
 
 const router: Router = express.Router();
+
+router.post('/', async (req: Request, res: Response) => {
+  try {
+    const { clinic_name, location, specialties, hours, rating, review_count, consultation_fee, phone, email } = req.body;
+
+    const vet = await createVet({
+      clinic_name,
+      location,
+      specialties,
+      hours,
+      rating: rating || 0,
+      review_count: review_count || 0,
+      consultation_fee,
+      phone,
+      email,
+      status: 'pending',
+      subscription_id: null,
+      subscription_status: 'pending',
+    } as any);
+
+    return res.status(201).json(vet);
+  } catch (error) {
+    console.error('Error creating vet:', error);
+    return res.status(500).json({ error: 'Failed to create vet' });
+  }
+});
 
 router.get('/', async (_req: Request, res: Response) => {
   try {
