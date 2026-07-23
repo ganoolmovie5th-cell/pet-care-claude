@@ -7,7 +7,7 @@ export const verifyVetAuth = async (req: Request, res: Response, next: NextFunct
 
   try {
     const decoded = await auth.verifyIdToken(token);
-    const vetClaim = (decoded.customClaims as any)?.vet;
+    const vetClaim = (decoded as any)['custom']?.vet;
     if (!vetClaim) return res.status(403).json({ error: 'Vet access required' });
     if (vetClaim !== req.params.vetId) return res.status(403).json({ error: 'Forbidden' });
     (req as any).userId = decoded.uid;

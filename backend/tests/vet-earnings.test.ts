@@ -31,7 +31,7 @@ describe('GET /vet/:vetId/dashboard', () => {
   it('should return dashboard data with earnings', async () => {
     (auth.verifyIdToken as jest.Mock).mockResolvedValue({
       uid: VET_ID,
-      customClaims: { vet: VET_ID },
+      custom: { vet: VET_ID },
     });
     (vetService.getVetEarnings as jest.Mock).mockResolvedValue(mockEarnings);
     (vetService.getVetBookings as jest.Mock).mockResolvedValue(mockBookings);
@@ -53,7 +53,7 @@ describe('GET /vet/:vetId/dashboard', () => {
   it('should reject wrong vet claim with 403', async () => {
     (auth.verifyIdToken as jest.Mock).mockResolvedValue({
       uid: 'other-vet',
-      customClaims: { vet: 'other-vet' },
+      custom: { vet: 'other-vet' },
     });
 
     const res = await request(app)
