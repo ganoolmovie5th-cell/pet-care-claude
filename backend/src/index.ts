@@ -6,6 +6,7 @@ import vetsRoutes from './routes/vets';
 import bookingsRoutes from './routes/bookings';
 import healthRoutes from './routes/health';
 import playdateRoutes from './routes/playdate';
+import chatRoutes from './routes/chat';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use('/vets', vetsRoutes);
 app.use('/bookings', bookingsRoutes);
 app.use('/health', healthRoutes);
 app.use('/playdate', playdateRoutes);
+app.use('/chat', chatRoutes);
 
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Error:', err.message);
