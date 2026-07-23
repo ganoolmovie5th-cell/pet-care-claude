@@ -8,6 +8,44 @@ export interface AnalyticsEvent {
   timestamp: string;
 }
 
+export interface AnalyticsEventInput {
+  eventType: string;
+  userId?: string;
+  vetId?: string;
+  metadata?: Record<string, any>;
+}
+
+export async function logAnalyticsEvent(event: AnalyticsEventInput): Promise<string> {
+  const now = new Date();
+  const docRef = await db.collection('analytics_events').add({
+    ...event,
+    timestamp: now.toISOString(),
+    date: now.toISOString().split('T')[0],
+  });
+  return docRef.id;
+}
+
+export async function getEventStats(
+  eventType: string,
+  startDate: string,
+  endDate: string
+): Promise<{ count: number; uniqueUsers: number }> {
+  const snapshot = await db
+    .collection('analytics_events')
+    .where('eventType', '==', eventType)
+    .where('date', '>=', startDate)
+    .where('date', '<=', endDate)
+    .get();
+
+  const users = new Set<string>();
+  snapshot.forEach(doc => {
+    const uid = doc.data().userId;
+    if (uid) users.add(uid);
+  });
+
+  return { count: snapshot.size, uniqueUsers: users.size };
+}
+
 export async function logEvent(
   userId: string,
   eventType: AnalyticsEvent['eventType'],

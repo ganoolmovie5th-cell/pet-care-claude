@@ -1,18 +1,27 @@
 import express, { Router, Request, Response } from 'express';
-import { logEvent, getDailyMetrics, getMetricsRange } from '../services/analytics';
+import { logEvent, getDailyMetrics, getMetricsRange, logAnalyticsEvent } from '../services/analytics';
+import { enqueueAnalyticsTask } from '../queues/analyticsQueue';
 
 const router: Router = express.Router();
 
+const VALID_EVENT_TYPES = ['app_opened', 'booking_created', 'payment_completed', 'vet_viewed', 'dispute_opened'];
+const CRITICAL_EVENT_TYPES = ['payment_completed', 'dispute_opened'];
+
 router.post('/event', async (req: Request, res: Response) => {
   try {
-    const { userId, eventType, metadata } = req.body;
+    const { eventType, userId, vetId, metadata } = req.body;
 
-    if (!userId || !eventType) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    if (!VALID_EVENT_TYPES.includes(eventType)) {
+      return res.status(400).json({ error: 'Invalid event type' });
     }
 
-    const eventId = await logEvent(userId, eventType, metadata);
-    return res.status(201).json({ id: eventId });
+    const eventId = await logAnalyticsEvent({ eventType, userId, vetId, metadata });
+
+    if (CRITICAL_EVENT_TYPES.includes(eventType)) {
+      await enqueueAnalyticsTask(eventId, eventType);
+    }
+
+    return res.json({ success: true, eventId });
   } catch (error) {
     console.error('Error logging event:', error);
     return res.status(500).json({ error: 'Failed to log event' });
