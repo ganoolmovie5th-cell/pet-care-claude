@@ -60,10 +60,10 @@ router.post('/', async (req: Request, res: Response) => {
       // Don't fail booking creation if SMS fails
     }
 
-    res.status(201).json({ id: bookingId, message: 'Booking created' });
+    return res.status(201).json({ id: bookingId, message: 'Booking created' });
   } catch (error) {
     console.error('Error creating booking:', error);
-    res.status(500).json({ error: 'Failed to create booking' });
+    return res.status(500).json({ error: 'Failed to create booking' });
   }
 });
 

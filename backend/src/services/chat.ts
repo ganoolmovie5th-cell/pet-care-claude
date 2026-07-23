@@ -1,4 +1,5 @@
-import { db, admin } from '../config/firebase';
+import { db } from '../config/firebase';
+import admin from '../config/firebase';
 
 export interface ChatMessage {
   id: string;

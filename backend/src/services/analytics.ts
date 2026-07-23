@@ -3,7 +3,7 @@ import { db } from '../config/firebase';
 export interface AnalyticsEvent {
   id: string;
   userId: string;
-  eventType: 'booking_created' | 'payment_completed' | 'playdate_posted' | 'insurance_clicked' | 'screen_view';
+  eventType: 'booking_created' | 'payment_completed' | 'playdate_posted' | 'insurance_clicked' | 'screen_view' | 'error_occurred';
   metadata?: Record<string, any>;
   timestamp: string;
 }

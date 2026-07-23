@@ -1,5 +1,5 @@
 import express, { Router, Request, Response } from 'express';
-import { createPet, getPetsByOwnerId, addHealthRecord, getHealthRecordsByPetId, Pet, HealthRecord } from '../services/health';
+import { createPet, getPetsByOwnerId, addHealthRecord, getHealthRecordsByPetId } from '../services/health';
 
 const router: Router = express.Router();
 
@@ -10,9 +10,9 @@ router.post('/pets', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
     const petId = await createPet({ ownerId, name, breed, age, photo, microchip });
-    res.status(201).json({ id: petId });
+    return res.status(201).json({ id: petId });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create pet' });
+    return res.status(500).json({ error: 'Failed to create pet' });
   }
 });
 
@@ -20,9 +20,9 @@ router.get('/pets/owner/:ownerId', async (req: Request, res: Response) => {
   try {
     const { ownerId } = req.params;
     const pets = await getPetsByOwnerId(ownerId);
-    res.json(pets);
+    return res.json(pets);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch pets' });
+    return res.status(500).json({ error: 'Failed to fetch pets' });
   }
 });
 
@@ -33,9 +33,9 @@ router.post('/records', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
     const recordId = await addHealthRecord({ petId, type, date, note, vet_name, next_due_date });
-    res.status(201).json({ id: recordId });
+    return res.status(201).json({ id: recordId });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to add health record' });
+    return res.status(500).json({ error: 'Failed to add health record' });
   }
 });
 
@@ -43,9 +43,9 @@ router.get('/records/pet/:petId', async (req: Request, res: Response) => {
   try {
     const { petId } = req.params;
     const records = await getHealthRecordsByPetId(petId);
-    res.json(records);
+    return res.json(records);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch health records' });
+    return res.status(500).json({ error: 'Failed to fetch health records' });
   }
 });
 

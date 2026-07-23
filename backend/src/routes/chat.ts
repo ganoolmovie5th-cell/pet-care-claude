@@ -15,10 +15,10 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
     }
 
     const chat = await getOrCreateChat(matchId, userId, otherUserId);
-    res.json(chat);
+    return res.json(chat);
   } catch (error) {
     console.error('Error creating chat:', error);
-    res.status(500).json({ error: 'Failed to create chat' });
+    return res.status(500).json({ error: 'Failed to create chat' });
   }
 });
 
@@ -34,10 +34,10 @@ router.post('/:chatId/message', authenticateToken, async (req: Request, res: Res
     }
 
     const message = await sendMessage(chatId, userId, text);
-    res.json(message);
+    return res.json(message);
   } catch (error) {
     console.error('Error sending message:', error);
-    res.status(500).json({ error: 'Failed to send message' });
+    return res.status(500).json({ error: 'Failed to send message' });
   }
 });
 
@@ -48,10 +48,10 @@ router.get('/:chatId/messages', authenticateToken, async (req: Request, res: Res
     const limit = parseInt(req.query.limit as string) || 50;
 
     const messages = await getMessages(chatId, limit);
-    res.json(messages);
+    return res.json(messages);
   } catch (error) {
     console.error('Error fetching messages:', error);
-    res.status(500).json({ error: 'Failed to fetch messages' });
+    return res.status(500).json({ error: 'Failed to fetch messages' });
   }
 });
 
@@ -62,10 +62,10 @@ router.post('/:chatId/read', authenticateToken, async (req: Request, res: Respon
     const userId = (req as any).userId;
 
     await markMessagesAsRead(chatId, userId);
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (error) {
     console.error('Error marking messages as read:', error);
-    res.status(500).json({ error: 'Failed to mark messages as read' });
+    return res.status(500).json({ error: 'Failed to mark messages as read' });
   }
 });
 

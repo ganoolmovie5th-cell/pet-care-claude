@@ -14,10 +14,10 @@ router.post('/create-invoice', async (req: Request, res: Response) => {
     }
 
     const invoice = await createPaymentInvoice(bookingId, userId, amount, description);
-    res.status(201).json(invoice);
+    return res.status(201).json(invoice);
   } catch (error) {
     console.error('Error creating invoice:', error);
-    res.status(500).json({ error: 'Failed to create invoice' });
+    return res.status(500).json({ error: 'Failed to create invoice' });
   }
 });
 
@@ -30,10 +30,10 @@ router.get('/invoice/:invoiceId', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Invoice not found' });
     }
 
-    res.json(invoice);
+    return res.json(invoice);
   } catch (error) {
     console.error('Error fetching invoice:', error);
-    res.status(500).json({ error: 'Failed to fetch invoice' });
+    return res.status(500).json({ error: 'Failed to fetch invoice' });
   }
 });
 
@@ -46,10 +46,10 @@ router.get('/booking/:bookingId/status', async (req: Request, res: Response) => 
       return res.status(404).json({ error: 'No payment found for this booking' });
     }
 
-    res.json({ status: invoice.status, paidAt: invoice.paidAt });
+    return res.json({ status: invoice.status, paidAt: invoice.paidAt });
   } catch (error) {
     console.error('Error checking payment status:', error);
-    res.status(500).json({ error: 'Failed to check payment status' });
+    return res.status(500).json({ error: 'Failed to check payment status' });
   }
 });
 
@@ -74,10 +74,10 @@ router.post('/xendit-webhook', async (req: Request, res: Response) => {
       await updatePaymentStatus(bookingId, 'paid');
     }
 
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (error) {
     console.error('Error processing webhook:', error);
-    res.status(500).json({ error: 'Failed to process webhook' });
+    return res.status(500).json({ error: 'Failed to process webhook' });
   }
 });
 

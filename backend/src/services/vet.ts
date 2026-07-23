@@ -1,4 +1,5 @@
 import { db } from '../config/firebase';
+import { Query } from 'firebase-admin/firestore';
 
 export interface Vet {
   id: string;
@@ -40,7 +41,7 @@ export const searchVets = async (filters: {
   lat?: number;
   lng?: number;
 }): Promise<Vet[]> => {
-  let query = db.collection('vets');
+  let query: Query = db.collection('vets') as Query;
 
   if (filters.city) {
     query = query.where('location.city', '==', filters.city);

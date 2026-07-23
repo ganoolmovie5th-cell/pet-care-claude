@@ -43,10 +43,10 @@ router.get('/:vetId', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Vet not found' });
     }
 
-    res.json(vet);
+    return res.json(vet);
   } catch (error) {
     console.error('Error fetching vet:', error);
-    res.status(500).json({ error: 'Failed to fetch vet' });
+    return res.status(500).json({ error: 'Failed to fetch vet' });
   }
 });
 

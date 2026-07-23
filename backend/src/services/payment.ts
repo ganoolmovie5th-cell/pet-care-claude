@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { db } from '../config/firebase';
 
-const xenditApiKey = process.env.XENDIT_API_KEY;
+const xenditApiKey = process.env.XENDIT_API_KEY || '';
 const xenditBaseUrl = 'https://api.xendit.co';
 
 export interface PaymentInvoice {
