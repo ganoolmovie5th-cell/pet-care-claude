@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
 import { useAnalytics } from '../hooks/use-analytics';
+import { initializeMessaging } from '../services/push-notifications';
 
 export default function HomeScreen() {
   const { logEvent } = useAnalytics();
 
   useEffect(() => {
     logEvent('app_opened');
+    void initializeMessaging();
   }, []);
 
   return (
