@@ -15,6 +15,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@google-cloud/bigquery": "^8.3.1",
     "@google-cloud/tasks": "^6.2.3",
     "@sendgrid/mail": "^8.1.6",
     "axios": "^1.6.0",
