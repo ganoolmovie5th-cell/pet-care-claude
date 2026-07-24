@@ -1,155 +1,144 @@
-import { Router, Request, Response } from 'express';
+import express from 'express';
+import { authenticateToken } from '../middleware/auth';
 import {
-  createPost,
-  getPostById,
-  searchPostsNearby,
+  createPlaydatePost,
+  getPlaydatePost,
+  updatePlaydatePost,
+  getPlaydatePostsByOwner,
+  getAllActivePosts,
   addInterestedOwner,
   removeInterestedOwner,
-  getInterestedMatches,
-  createMatch,
-  updateMatchStatus,
-  PlaydatePost,
-  PlaydateMatch,
+  createPlaydateChat,
+  getPlaydateChatsByPost,
+  getPlaydateChat,
+  addMessageToChat,
 } from '../services/playdate';
 
-const router = Router();
+const router = express.Router();
 
-router.post('/posts', async (req: Request, res: Response) => {
+// Posts CRUD
+router.post('/posts', authenticateToken, async (_req, res, next) => {
   try {
-    const { ownerId, petId, location, date, time, description, photos } = req.body;
-
-    if (!ownerId || !petId || !location || !date || !time || !description) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    const postId = await createPost({
-      ownerId,
-      petId,
-      location,
-      date,
-      time,
-      description,
-      photos: photos || [],
-      status: 'open',
-    } as Omit<PlaydatePost, 'id' | 'created_at' | 'interested_owners'>);
-
-    return res.status(201).json({ id: postId });
-  } catch (err) {
-    console.error('Error creating playdate post:', err);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-router.get('/posts', async (req: Request, res: Response) => {
-  try {
-    const { city, lat, lng, maxDistance } = req.query;
-
-    if (!city) {
-      return res.status(400).json({ error: 'city parameter required' });
-    }
-
-    const posts = await searchPostsNearby({
-      city: city as string,
-      lat: lat ? parseFloat(lat as string) : undefined,
-      lng: lng ? parseFloat(lng as string) : undefined,
-      maxDistance: maxDistance ? parseFloat(maxDistance as string) : 10,
+    const post = await createPlaydatePost({
+      ...req.body,
+      ownerId: (req as any).userId || 'test-user',
+      interested_owners: [],
     });
-
-    return res.json(posts);
+    res.json({ id: post.id, created_at: post.created_at });
   } catch (err) {
-    console.error('Error fetching playdate posts:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    next(err);
   }
 });
 
-router.get('/posts/:postId', async (req: Request, res: Response) => {
+router.get('/posts/:postId', authenticateToken, async (_req, res, next) => {
   try {
-    const { postId } = req.params;
-    const post = await getPostById(postId);
-
+    const post = await getPlaydatePost(req.params.postId);
     if (!post) {
-      return res.status(404).json({ error: 'Post not found' });
+      res.status(404).json({ error: 'Post not found' });
+      return;
     }
-
-    return res.json(post);
+    res.json(post);
   } catch (err) {
-    console.error('Error fetching playdate post:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    next(err);
   }
 });
 
-router.post('/posts/:postId/interest', async (req: Request, res: Response) => {
+router.patch('/posts/:postId', authenticateToken, async (_req, res, next) => {
   try {
-    const { postId } = req.params;
-    const { ownerId, petId } = req.body;
-
-    if (!ownerId || !petId) {
-      return res.status(400).json({ error: 'ownerId and petId required' });
+    const post = await getPlaydatePost(req.params.postId);
+    if (!post || post.ownerId !== ((req as any).userId || 'test-user')) {
+      res.status(404).json({ error: 'Post not found' });
+      return;
     }
-
-    await addInterestedOwner(postId, ownerId);
-    const matchId = await createMatch({
-      postId,
-      ownerId,
-      petId,
-      interested_date: new Date().toISOString(),
-      status: 'pending',
-    } as Omit<PlaydateMatch, 'id' | 'created_at'>);
-
-    return res.status(201).json({ matchId });
+    await updatePlaydatePost(req.params.postId, req.body);
+    res.json({ success: true });
   } catch (err) {
-    console.error('Error marking interest:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    next(err);
   }
 });
 
-router.delete('/posts/:postId/interest', async (req: Request, res: Response) => {
+router.get('/posts/owner/mine', authenticateToken, async (_req, res, next) => {
   try {
-    const { postId } = req.params;
-    const { ownerId } = req.body;
+    const posts = await getPlaydatePostsByOwner((req as any).userId || 'test-user');
+    res.json(posts);
+  } catch (err) {
+    next(err);
+  }
+});
 
-    if (!ownerId) {
-      return res.status(400).json({ error: 'ownerId required' });
+router.get('/posts/active/all', authenticateToken, async (_req, res, next) => {
+  try {
+    const posts = await getAllActivePosts();
+    res.json(posts);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Interest
+router.post('/posts/:postId/interested', authenticateToken, async (_req, res, next) => {
+  try {
+    await addInterestedOwner(req.params.postId, (req as any).userId || 'test-user');
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/posts/:postId/interested', authenticateToken, async (_req, res, next) => {
+  try {
+    await removeInterestedOwner(req.params.postId, (req as any).userId || 'test-user');
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Chat
+router.post('/posts/:postId/chat/start', authenticateToken, async (_req, res, next) => {
+  try {
+    const { interestedOwnerId, initialMessage } = req.body;
+    const chat = await createPlaydateChat(
+      req.params.postId,
+      (req as any).userId || 'test-user',
+      interestedOwnerId,
+      initialMessage
+    );
+    res.json({ id: chat.id, created_at: chat.created_at });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/posts/:postId/chat', authenticateToken, async (_req, res, next) => {
+  try {
+    const chats = await getPlaydateChatsByPost(req.params.postId);
+    res.json(chats);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/chat/:chatId', authenticateToken, async (_req, res, next) => {
+  try {
+    const chat = await getPlaydateChat(req.params.chatId);
+    if (!chat) {
+      res.status(404).json({ error: 'Chat not found' });
+      return;
     }
-
-    await removeInterestedOwner(postId, ownerId);
-    return res.json({ success: true });
+    res.json(chat);
   } catch (err) {
-    console.error('Error removing interest:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    next(err);
   }
 });
 
-router.get('/posts/:postId/matches', async (req: Request, res: Response) => {
+router.post('/chat/:chatId/message', authenticateToken, async (_req, res, next) => {
   try {
-    const { postId } = req.params;
-    const matches = await getInterestedMatches(postId);
-    return res.json(matches);
+    const { text } = req.body;
+    await addMessageToChat(req.params.chatId, (req as any).userId || 'test-user', text);
+    res.json({ success: true });
   } catch (err) {
-    console.error('Error fetching matches:', err);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-router.post('/matches/:matchId/accept', async (req: Request, res: Response) => {
-  try {
-    const { matchId } = req.params;
-    await updateMatchStatus(matchId, 'accepted');
-    return res.json({ success: true });
-  } catch (err) {
-    console.error('Error accepting match:', err);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-router.post('/matches/:matchId/reject', async (req: Request, res: Response) => {
-  try {
-    const { matchId } = req.params;
-    await updateMatchStatus(matchId, 'rejected');
-    return res.json({ success: true });
-  } catch (err) {
-    console.error('Error rejecting match:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    next(err);
   }
 });
 

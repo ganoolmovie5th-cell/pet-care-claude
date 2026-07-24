@@ -12,7 +12,13 @@ import analyticsRoutes from './routes/analytics';
 import adminRoutes from './routes/admin';
 import vetRoutes from './routes/vet';
 import emailRoutes from './routes/email';
+import reviewsRoutes from './routes/reviews';
+import recommendationsRoutes from './routes/recommendations';
+import playdateMatchesRoutes from './routes/playdate-matches';
+import fcmRoutes from './routes/fcm';
 import { errorHandler } from './middleware/errorHandler';
+
+export * from './types/playdate';
 
 dotenv.config();
 
@@ -38,6 +44,10 @@ app.use('/analytics', analyticsRoutes);
 app.use('/admin/vet', adminRoutes);
 app.use('/vet', vetRoutes);
 app.use('/email', emailRoutes);
+app.use('/reviews', reviewsRoutes);
+app.use('/recommendations', recommendationsRoutes);
+app.use('/playdate/matches', playdateMatchesRoutes);
+app.use('/fcm', fcmRoutes);
 
 app.use(errorHandler);
 
