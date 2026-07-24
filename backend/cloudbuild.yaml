@@ -1,0 +1,38 @@
+steps:
+  # Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/pet-care-backend:$SHORT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/pet-care-backend:latest'
+      - '-f'
+      - 'backend/Dockerfile'
+      - 'backend'
+
+  # Push to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/pet-care-backend:$SHORT_SHA'
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/cloud-builders/run'
+    args:
+      - 'deploy'
+      - 'pet-care-backend'
+      - '--image=gcr.io/$PROJECT_ID/pet-care-backend:$SHORT_SHA'
+      - '--region=us-central1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars=NODE_ENV=production'
+
+images:
+  - 'gcr.io/$PROJECT_ID/pet-care-backend:$SHORT_SHA'
+  - 'gcr.io/$PROJECT_ID/pet-care-backend:latest'
+
+options:
+  machineType: 'N1_HIGHCPU_8'
+
+timeout: '3600s'
