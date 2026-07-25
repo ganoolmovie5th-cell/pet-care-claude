@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { firebaseConfigured } from '../services/firebase-config';
+import { demoCredentials, demoMode } from '../services/demo';
 
 export default function Login() {
   const { user, error, login } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState(demoMode ? demoCredentials.email : '');
+  const [password, setPassword] = useState(demoMode ? demoCredentials.password : '');
   const [busy, setBusy] = useState(false);
 
   if (user) return <Navigate to="/" replace />;
@@ -50,14 +51,20 @@ export default function Login() {
           onChange={e => setPassword(e.target.value)}
         />
 
-        {!firebaseConfigured && (
+        {demoMode && (
+          <p className="stat-hint">
+            Mode demo — data di dalam cuma contoh. Login: {demoCredentials.email} /{' '}
+            {demoCredentials.password}
+          </p>
+        )}
+        {!demoMode && !firebaseConfigured && (
           <p className="error">
             Firebase belum dikonfigurasi. Set VITE_FIREBASE_* di environment, lalu deploy ulang.
           </p>
         )}
         {error && <p className="error">{error}</p>}
 
-        <button className="btn" type="submit" disabled={busy || !firebaseConfigured}>
+        <button className="btn" type="submit" disabled={busy || (!demoMode && !firebaseConfigured)}>
           {busy ? 'Masuk…' : 'Masuk'}
         </button>
       </form>

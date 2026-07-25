@@ -1,4 +1,5 @@
 import api from './api';
+import { demoBookings, demoEarnings, demoMode, demoReviews, demoSummary } from './demo';
 
 export interface VetEarnings {
   totalEarnings: number;
@@ -35,6 +36,7 @@ export interface Review {
 }
 
 export const getVetDashboard = async (vetId: string) => {
+  if (demoMode) return { earnings: demoEarnings, recentBookings: demoBookings.slice(0, 5) };
   const { data } = await api.get<{ earnings: VetEarnings; recentBookings: VetBooking[] }>(
     `/vet/${vetId}/dashboard`,
   );
@@ -42,6 +44,7 @@ export const getVetDashboard = async (vetId: string) => {
 };
 
 export const getVetBookings = async (vetId: string, limit = 50) => {
+  if (demoMode) return demoBookings.slice(0, limit);
   const { data } = await api.get<{ bookings: VetBooking[] }>(`/vet/${vetId}/bookings`, {
     params: { limit },
   });
@@ -49,11 +52,13 @@ export const getVetBookings = async (vetId: string, limit = 50) => {
 };
 
 export const getVetRatingSummary = async (vetId: string) => {
+  if (demoMode) return demoSummary;
   const { data } = await api.get<RatingSummary>(`/reviews/vets/${vetId}/summary`);
   return data;
 };
 
 export const getVetReviews = async (vetId: string, sort = 'recent', limit = 20) => {
+  if (demoMode) return { reviews: demoReviews.slice(0, limit), total: demoSummary.review_count };
   const { data } = await api.get<{ reviews: Review[]; total: number }>(`/reviews/${vetId}`, {
     params: { type: 'vet', sort, limit },
   });
