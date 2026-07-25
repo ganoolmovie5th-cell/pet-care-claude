@@ -1,13 +1,60 @@
+import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+
 export default function Login() {
+  const { user, error, login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  if (user) return <Navigate to="/" replace />;
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      await login(email, password);
+    } catch {
+      // useAuth already stores the message in `error`
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
-    <div style={{ padding: '2rem', textAlign: 'center' }}>
-      <h1>Vet Dashboard Login</h1>
-      <form>
-        <input type="email" placeholder="Email" required />
-        <input type="password" placeholder="Password" required />
-        <button type="submit">Login</button>
+    <div className="login-page">
+      <form className="card login-card" onSubmit={submit}>
+        <img src="/logo.svg" alt="" width={56} height={56} />
+        <h1>Vet Dashboard</h1>
+        <p className="subtitle">Masuk pakai akun vet kamu</p>
+
+        <label htmlFor="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+        />
+
+        <label htmlFor="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          autoComplete="current-password"
+          required
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+        />
+
+        {error && <p className="error">{error}</p>}
+
+        <button className="btn" type="submit" disabled={busy}>
+          {busy ? 'Masuk…' : 'Masuk'}
+        </button>
       </form>
-      <p>Placeholder - TBD in Task 4</p>
     </div>
   );
 }
