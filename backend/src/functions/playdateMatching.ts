@@ -16,6 +16,7 @@ export const notifyPlaydateInterest = functions.firestore
       if (!postDoc.exists) return;
 
       const post = postDoc.data();
+      if (!post) return;
       const postOwnerId = post.ownerId;
 
       // Get interested owner details

@@ -120,7 +120,7 @@ export const getPlaydateMatches = async (
 
   for (const postDoc of postsSnapshot.docs) {
     const post = postDoc.data() as PlaydatePost;
-    const postData = { id: postDoc.id, ...post };
+    const postData = { ...post, id: postDoc.id };
 
     // Calculate distance
     const distance_km = calculateDistance(

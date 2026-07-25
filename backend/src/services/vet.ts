@@ -17,6 +17,7 @@ export interface Vet {
   };
   rating: number;
   review_count: number;
+  rating_distribution?: { 1: number; 2: number; 3: number; 4: number; 5: number };
   consultation_fee: number;
   phone: string;
   email?: string;

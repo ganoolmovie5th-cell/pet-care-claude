@@ -1,5 +1,5 @@
 import twilio from 'twilio';
-import { db, admin } from '../config/firebase';
+import admin, { db } from '../config/firebase';
 
 const client = twilio(
   process.env.TWILIO_ACCOUNT_SID,

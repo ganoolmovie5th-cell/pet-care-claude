@@ -17,7 +17,7 @@ import {
 const router = express.Router();
 
 // Posts CRUD
-router.post('/posts', authenticateToken, async (_req, res, next) => {
+router.post('/posts', authenticateToken, async (req, res, next) => {
   try {
     const post = await createPlaydatePost({
       ...req.body,
@@ -30,7 +30,7 @@ router.post('/posts', authenticateToken, async (_req, res, next) => {
   }
 });
 
-router.get('/posts/:postId', authenticateToken, async (_req, res, next) => {
+router.get('/posts/:postId', authenticateToken, async (req, res, next) => {
   try {
     const post = await getPlaydatePost(req.params.postId);
     if (!post) {
@@ -43,7 +43,7 @@ router.get('/posts/:postId', authenticateToken, async (_req, res, next) => {
   }
 });
 
-router.patch('/posts/:postId', authenticateToken, async (_req, res, next) => {
+router.patch('/posts/:postId', authenticateToken, async (req, res, next) => {
   try {
     const post = await getPlaydatePost(req.params.postId);
     if (!post || post.ownerId !== ((req as any).userId || 'test-user')) {
@@ -57,7 +57,7 @@ router.patch('/posts/:postId', authenticateToken, async (_req, res, next) => {
   }
 });
 
-router.get('/posts/owner/mine', authenticateToken, async (_req, res, next) => {
+router.get('/posts/owner/mine', authenticateToken, async (req, res, next) => {
   try {
     const posts = await getPlaydatePostsByOwner((req as any).userId || 'test-user');
     res.json(posts);
@@ -76,7 +76,7 @@ router.get('/posts/active/all', authenticateToken, async (_req, res, next) => {
 });
 
 // Interest
-router.post('/posts/:postId/interested', authenticateToken, async (_req, res, next) => {
+router.post('/posts/:postId/interested', authenticateToken, async (req, res, next) => {
   try {
     await addInterestedOwner(req.params.postId, (req as any).userId || 'test-user');
     res.json({ success: true });
@@ -85,7 +85,7 @@ router.post('/posts/:postId/interested', authenticateToken, async (_req, res, ne
   }
 });
 
-router.delete('/posts/:postId/interested', authenticateToken, async (_req, res, next) => {
+router.delete('/posts/:postId/interested', authenticateToken, async (req, res, next) => {
   try {
     await removeInterestedOwner(req.params.postId, (req as any).userId || 'test-user');
     res.json({ success: true });
@@ -95,7 +95,7 @@ router.delete('/posts/:postId/interested', authenticateToken, async (_req, res, 
 });
 
 // Chat
-router.post('/posts/:postId/chat/start', authenticateToken, async (_req, res, next) => {
+router.post('/posts/:postId/chat/start', authenticateToken, async (req, res, next) => {
   try {
     const { interestedOwnerId, initialMessage } = req.body;
     const chat = await createPlaydateChat(
@@ -110,7 +110,7 @@ router.post('/posts/:postId/chat/start', authenticateToken, async (_req, res, ne
   }
 });
 
-router.get('/posts/:postId/chat', authenticateToken, async (_req, res, next) => {
+router.get('/posts/:postId/chat', authenticateToken, async (req, res, next) => {
   try {
     const chats = await getPlaydateChatsByPost(req.params.postId);
     res.json(chats);
@@ -119,7 +119,7 @@ router.get('/posts/:postId/chat', authenticateToken, async (_req, res, next) => 
   }
 });
 
-router.get('/chat/:chatId', authenticateToken, async (_req, res, next) => {
+router.get('/chat/:chatId', authenticateToken, async (req, res, next) => {
   try {
     const chat = await getPlaydateChat(req.params.chatId);
     if (!chat) {
@@ -132,7 +132,7 @@ router.get('/chat/:chatId', authenticateToken, async (_req, res, next) => {
   }
 });
 
-router.post('/chat/:chatId/message', authenticateToken, async (_req, res, next) => {
+router.post('/chat/:chatId/message', authenticateToken, async (req, res, next) => {
   try {
     const { text } = req.body;
     await addMessageToChat(req.params.chatId, (req as any).userId || 'test-user', text);

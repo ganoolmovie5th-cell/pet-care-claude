@@ -1,4 +1,4 @@
-import { db } from '../config/firebase';
+import admin, { db } from '../config/firebase';
 
 export interface Review {
   id: string;
@@ -76,7 +76,7 @@ export const getReviewsByTargetId = async (
 
 export const incrementHelpfulCount = async (reviewId: string): Promise<void> => {
   await db.collection('reviews').doc(reviewId).update({
-    helpful_count: db.FieldValue.increment(1),
+    helpful_count: admin.firestore.FieldValue.increment(1),
     updated_at: new Date().toISOString(),
   });
 };
@@ -127,7 +127,7 @@ export const calculateVetRating = async (vetId: string): Promise<VetRatingSummar
     };
   }
 
-  const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
   let sumRating = 0;
 
   reviews.forEach(review => {
