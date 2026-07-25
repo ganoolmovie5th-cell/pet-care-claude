@@ -15,6 +15,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "axios": "^1.6.0",
     "firebase": "^10.5.0",
     "react": "^19.0.0",
