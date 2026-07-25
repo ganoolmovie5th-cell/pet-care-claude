@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { firebaseConfigured } from '../services/firebase-config';
 
 export default function Login() {
   const { user, error, login } = useAuth();
@@ -49,9 +50,14 @@ export default function Login() {
           onChange={e => setPassword(e.target.value)}
         />
 
+        {!firebaseConfigured && (
+          <p className="error">
+            Firebase belum dikonfigurasi. Set VITE_FIREBASE_* di environment, lalu deploy ulang.
+          </p>
+        )}
         {error && <p className="error">{error}</p>}
 
-        <button className="btn" type="submit" disabled={busy}>
+        <button className="btn" type="submit" disabled={busy || !firebaseConfigured}>
           {busy ? 'Masuk…' : 'Masuk'}
         </button>
       </form>

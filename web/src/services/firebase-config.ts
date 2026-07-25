@@ -1,6 +1,10 @@
 // ponytail: isolated so jest can moduleNameMapper this file to avoid import.meta.env parse errors
+export const firebaseConfigured = Boolean(import.meta.env.VITE_FIREBASE_API_KEY);
+
 export const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  // Without a placeholder getAuth() throws auth/invalid-api-key at import time
+  // and the app white-screens before React can render anything.
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY ?? 'missing-api-key',
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
