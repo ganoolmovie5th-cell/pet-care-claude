@@ -21,7 +21,7 @@ export interface PlaydateMatch {
   match_score: number;
 }
 
-const calculateDistance = (
+export const calculateDistance = (
   lat1: number,
   lng1: number,
   lat2: number,
