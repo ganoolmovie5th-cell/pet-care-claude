@@ -15,7 +15,7 @@ jest.mock('firebase/messaging', () => ({
 
 const mockRegister = jest.fn();
 const mockReady = Promise.resolve({ active: {} });
-Object.defineProperty(global.navigator, 'serviceWorker', {
+Object.defineProperty(globalThis.navigator, 'serviceWorker', {
   value: { register: mockRegister, ready: mockReady },
   writable: true,
 });
@@ -23,7 +23,7 @@ Object.defineProperty(global.navigator, 'serviceWorker', {
 beforeEach(() => {
   localStorage.clear();
   jest.clearAllMocks();
-  Object.defineProperty(global, 'Notification', {
+  Object.defineProperty(globalThis, 'Notification', {
     value: { permission: 'granted', requestPermission: jest.fn().mockResolvedValue('granted') },
     writable: true,
     configurable: true,
@@ -54,7 +54,7 @@ test('initializeMessaging registers SW and subscribes foreground handler', async
 });
 
 test('initializeMessaging exits early when permission denied', async () => {
-  Object.defineProperty(global, 'Notification', {
+  Object.defineProperty(globalThis, 'Notification', {
     value: { permission: 'denied', requestPermission: jest.fn().mockResolvedValue('denied') },
     writable: true,
     configurable: true,
