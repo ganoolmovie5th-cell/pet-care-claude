@@ -32,20 +32,24 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
 
   return (
     <>
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-xl font-bold">Pet Care Admin</h1>
+      <nav className="bg-[#0f5c4a] shadow">
+        <div className="mx-auto max-w-7xl px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icon.svg" alt="" className="h-9 w-9 rounded-xl" />
+              <h1 className="text-lg font-bold text-white">Pet Care Admin</h1>
+            </div>
             <button
               onClick={() => auth.signOut()}
-              className="px-4 py-2 bg-red-600 text-white rounded"
+              className="rounded-lg border border-white/30 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
             >
               Logout
             </button>
           </div>
         </div>
       </nav>
-      <main className="max-w-7xl mx-auto px-4 py-8">{children}</main>
+      <main className="mx-auto max-w-7xl px-4 py-8">{children}</main>
     </>
   );
 }
