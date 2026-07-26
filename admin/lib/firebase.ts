@@ -14,3 +14,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(app);
 export const firestore: Firestore = getFirestore(app);
+
+// Demo bypass: true while the Firebase env vars are still the committed
+// placeholders. Flips off automatically once real credentials are configured,
+// so the auth guard cannot be accidentally left open in production.
+export const isDemoMode =
+  !process.env.NEXT_PUBLIC_FIREBASE_API_KEY ||
+  process.env.NEXT_PUBLIC_FIREBASE_API_KEY.includes('example');

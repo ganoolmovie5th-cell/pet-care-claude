@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, isDemoMode } from '@/lib/firebase';
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -11,6 +11,10 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (isDemoMode) {
+      setLoading(false);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         const idTokenResult = await currentUser.getIdTokenResult();
@@ -28,10 +32,16 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
   }, [router]);
 
   if (loading) return <div className="p-8">Loading...</div>;
-  if (!user) return null;
+  if (!user && !isDemoMode) return null;
 
   return (
     <>
+      {isDemoMode && (
+        <div className="bg-amber-400 px-4 py-2 text-center text-sm font-semibold text-amber-950">
+          MODE DEMO — auth dilewati karena kredensial Firebase belum diisi. Set env
+          NEXT_PUBLIC_FIREBASE_* asli untuk mengaktifkan login.
+        </div>
+      )}
       <nav className="bg-[#0f5c4a] shadow">
         <div className="mx-auto max-w-7xl px-4 py-3">
           <div className="flex items-center justify-between">
