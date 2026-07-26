@@ -12,7 +12,8 @@
     "test:coverage": "jest --coverage",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "create-vet": "ts-node scripts/create-vet.ts"
   },
   "dependencies": {
     "@google-cloud/bigquery": "^8.3.1",

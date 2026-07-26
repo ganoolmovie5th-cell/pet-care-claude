@@ -43,8 +43,8 @@ describe('Recommendations Service', () => {
       );
 
       recs.forEach(rec => {
-        expect(rec.rank_reasons).toBeDefined();
-        expect(Array.isArray(rec.rank_reasons)).toBe(true);
+        expect(rec.rank_reason).toBeDefined();
+        expect(typeof rec.rank_reason).toBe('string');
       });
     });
 
@@ -59,12 +59,12 @@ describe('Recommendations Service', () => {
 
       if (recs.length > 0) {
         const vet = recs[0];
-        expect(vet.final_score).toBeDefined();
-        expect(typeof vet.final_score).toBe('number');
+        expect(vet.recommendation_score).toBeDefined();
+        expect(typeof vet.recommendation_score).toBe('number');
       }
     });
 
-    it('sorts by final_score descending', async () => {
+    it('sorts by recommendation_score descending', async () => {
       const recs = await getVetRecommendations(
         'owner-123',
         -6.2088,
@@ -75,7 +75,9 @@ describe('Recommendations Service', () => {
 
       if (recs.length > 1) {
         for (let i = 1; i < recs.length; i++) {
-          expect(recs[i - 1].final_score).toBeGreaterThanOrEqual(recs[i].final_score);
+          expect(recs[i - 1].recommendation_score).toBeGreaterThanOrEqual(
+            recs[i].recommendation_score
+          );
         }
       }
     });
@@ -102,8 +104,8 @@ describe('Recommendations Service', () => {
 
       if (recs.length > 0) {
         const vet = recs[0];
-        expect(vet.final_score).toBeLessThanOrEqual(105);
-        expect(vet.final_score).toBeGreaterThanOrEqual(0);
+        expect(vet.recommendation_score).toBeLessThanOrEqual(105);
+        expect(vet.recommendation_score).toBeGreaterThanOrEqual(0);
       }
     });
   });
