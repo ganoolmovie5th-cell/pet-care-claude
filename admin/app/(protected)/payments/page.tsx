@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { firestore } from '@/lib/firebase';
+import { firestore, isDemoMode } from '@/lib/firebase';
+import { DEMO_PAYMENTS } from '@/lib/demo-data';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 
 interface Payment {
@@ -22,6 +23,11 @@ export default function PaymentsPage() {
   const loadPayments = async () => {
     setLoading(true);
     try {
+      if (isDemoMode) {
+        setPayments(DEMO_PAYMENTS);
+        setLoading(false);
+        return;
+      }
       let q = collection(firestore, 'payments');
       const snapshot = await getDocs(q);
       const data = snapshot.docs.map(doc => ({

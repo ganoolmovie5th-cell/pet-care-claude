@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { firestore } from '@/lib/firebase';
+import { firestore, isDemoMode } from '@/lib/firebase';
+import { DEMO_DISPUTES } from '@/lib/demo-data';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 
 interface Dispute {
@@ -22,6 +23,11 @@ export default function DisputesPage() {
   const loadDisputes = async () => {
     setLoading(true);
     try {
+      if (isDemoMode) {
+        setDisputes(DEMO_DISPUTES);
+        setLoading(false);
+        return;
+      }
       const snapshot = await getDocs(collection(firestore, 'disputes'));
       const data = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -40,7 +46,9 @@ export default function DisputesPage() {
 
   const handleResolve = async (id: string) => {
     try {
-      await updateDoc(doc(firestore, 'disputes', id), { status: 'resolved' });
+      if (!isDemoMode) {
+        await updateDoc(doc(firestore, 'disputes', id), { status: 'resolved' });
+      }
       setDisputes(disputes.map(d => d.id === id ? { ...d, status: 'resolved' } : d));
     } catch (err) {
       console.error('Error resolving dispute:', err);
@@ -49,7 +57,9 @@ export default function DisputesPage() {
 
   const handleReject = async (id: string) => {
     try {
-      await updateDoc(doc(firestore, 'disputes', id), { status: 'rejected' });
+      if (!isDemoMode) {
+        await updateDoc(doc(firestore, 'disputes', id), { status: 'rejected' });
+      }
       setDisputes(disputes.map(d => d.id === id ? { ...d, status: 'rejected' } : d));
     } catch (err) {
       console.error('Error rejecting dispute:', err);

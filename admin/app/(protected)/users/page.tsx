@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { firestore } from '@/lib/firebase';
+import { firestore, isDemoMode } from '@/lib/firebase';
+import { DEMO_USERS } from '@/lib/demo-data';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 
 interface User {
@@ -22,6 +23,11 @@ export default function UsersPage() {
   const loadUsers = async () => {
     setLoading(true);
     try {
+      if (isDemoMode) {
+        setUsers(DEMO_USERS);
+        setLoading(false);
+        return;
+      }
       const snapshot = await getDocs(collection(firestore, 'users'));
       const data = snapshot.docs.map(doc => ({
         uid: doc.id,
@@ -40,7 +46,9 @@ export default function UsersPage() {
 
   const handleFlag = async (uid: string, flagged: boolean) => {
     try {
-      await updateDoc(doc(firestore, 'users', uid), { flagged: !flagged });
+      if (!isDemoMode) {
+        await updateDoc(doc(firestore, 'users', uid), { flagged: !flagged });
+      }
       setUsers(users.map(u => u.uid === uid ? { ...u, flagged: !flagged } : u));
     } catch (err) {
       console.error('Error updating user:', err);
