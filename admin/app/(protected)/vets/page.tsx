@@ -19,18 +19,14 @@ interface Vet {
 }
 
 export default function VetsPage() {
-  const [vets, setVets] = useState<Vet[]>([]);
+  // Demo data is static, so it seeds initial state instead of going through an
+  // effect — that keeps the mount render free of a synchronous setState.
+  const [vets, setVets] = useState<Vet[]>(isDemoMode ? DEMO_VETS : []);
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(!isDemoMode);
 
   const loadVets = async () => {
-    setLoading(true);
     try {
-      if (isDemoMode) {
-        setVets(DEMO_VETS);
-        setLoading(false);
-        return;
-      }
       const snapshot = await getDocs(collection(firestore, 'vets'));
       const data = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -44,7 +40,8 @@ export default function VetsPage() {
   };
 
   useEffect(() => {
-    loadVets();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot fetch on mount; setState runs after the await, not during render.
+    if (!isDemoMode) loadVets();
   }, []);
 
   const handleApprove = async (vetId: string) => {

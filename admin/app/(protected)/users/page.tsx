@@ -16,18 +16,14 @@ interface User {
 }
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
+  // Demo data is static, so it seeds initial state instead of going through an
+  // effect — that keeps the mount render free of a synchronous setState.
+  const [users, setUsers] = useState<User[]>(isDemoMode ? DEMO_USERS : []);
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(!isDemoMode);
 
   const loadUsers = async () => {
-    setLoading(true);
     try {
-      if (isDemoMode) {
-        setUsers(DEMO_USERS);
-        setLoading(false);
-        return;
-      }
       const snapshot = await getDocs(collection(firestore, 'users'));
       const data = snapshot.docs.map(doc => ({
         uid: doc.id,
@@ -41,7 +37,8 @@ export default function UsersPage() {
   };
 
   useEffect(() => {
-    loadUsers();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot fetch on mount; setState runs after the await, not during render.
+    if (!isDemoMode) loadUsers();
   }, []);
 
   const handleFlag = async (uid: string, flagged: boolean) => {

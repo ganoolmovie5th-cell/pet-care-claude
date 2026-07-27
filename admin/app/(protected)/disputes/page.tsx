@@ -15,19 +15,19 @@ interface Dispute {
   created_at: string;
 }
 
+type DisputeFilter = Dispute['status'] | 'all';
+
+const FILTERS: DisputeFilter[] = ['open', 'resolved', 'rejected', 'all'];
+
 export default function DisputesPage() {
-  const [disputes, setDisputes] = useState<Dispute[]>([]);
-  const [filter, setFilter] = useState<'open' | 'resolved' | 'rejected' | 'all'>('open');
-  const [loading, setLoading] = useState(false);
+  // Demo data is static, so it seeds initial state instead of going through an
+  // effect — that keeps the mount render free of a synchronous setState.
+  const [disputes, setDisputes] = useState<Dispute[]>(isDemoMode ? DEMO_DISPUTES : []);
+  const [filter, setFilter] = useState<DisputeFilter>('open');
+  const [loading, setLoading] = useState(!isDemoMode);
 
   const loadDisputes = async () => {
-    setLoading(true);
     try {
-      if (isDemoMode) {
-        setDisputes(DEMO_DISPUTES);
-        setLoading(false);
-        return;
-      }
       const snapshot = await getDocs(collection(firestore, 'disputes'));
       const data = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -41,7 +41,8 @@ export default function DisputesPage() {
   };
 
   useEffect(() => {
-    loadDisputes();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot fetch on mount; setState runs after the await, not during render.
+    if (!isDemoMode) loadDisputes();
   }, []);
 
   const handleResolve = async (id: string) => {
@@ -72,10 +73,10 @@ export default function DisputesPage() {
     <div>
       <h1 className="text-3xl font-bold mb-6">Disputes</h1>
       <div className="mb-4 flex gap-2">
-        {['open', 'resolved', 'rejected', 'all'].map(s => (
+        {FILTERS.map(s => (
           <button
             key={s}
-            onClick={() => setFilter(s as any)}
+            onClick={() => setFilter(s)}
             className={`px-4 py-2 rounded ${filter === s ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}
           >
             {s.charAt(0).toUpperCase() + s.slice(1)}

@@ -15,20 +15,20 @@ interface Payment {
   due_date: string;
 }
 
+type PaymentFilter = 'all' | Payment['status'];
+
+const FILTERS: PaymentFilter[] = ['all', 'pending', 'paid', 'failed'];
+
 export default function PaymentsPage() {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'paid' | 'failed'>('all');
-  const [loading, setLoading] = useState(false);
+  // Demo data is static, so it seeds initial state instead of going through an
+  // effect — that keeps the mount render free of a synchronous setState.
+  const [payments, setPayments] = useState<Payment[]>(isDemoMode ? DEMO_PAYMENTS : []);
+  const [filter, setFilter] = useState<PaymentFilter>('all');
+  const [loading, setLoading] = useState(!isDemoMode);
 
   const loadPayments = async () => {
-    setLoading(true);
     try {
-      if (isDemoMode) {
-        setPayments(DEMO_PAYMENTS);
-        setLoading(false);
-        return;
-      }
-      let q = collection(firestore, 'payments');
+      const q = collection(firestore, 'payments');
       const snapshot = await getDocs(q);
       const data = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -42,7 +42,8 @@ export default function PaymentsPage() {
   };
 
   useEffect(() => {
-    loadPayments();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot fetch on mount; setState runs after the await, not during render.
+    if (!isDemoMode) loadPayments();
   }, []);
 
   const filtered = payments.filter(p => filter === 'all' || p.status === filter);
@@ -51,10 +52,10 @@ export default function PaymentsPage() {
     <div>
       <h1 className="text-3xl font-bold mb-6">Payments</h1>
       <div className="mb-4 flex gap-2">
-        {['all', 'pending', 'paid', 'failed'].map(s => (
+        {FILTERS.map(s => (
           <button
             key={s}
-            onClick={() => setFilter(s as any)}
+            onClick={() => setFilter(s)}
             className={`px-4 py-2 rounded ${filter === s ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}
           >
             {s.charAt(0).toUpperCase() + s.slice(1)}
