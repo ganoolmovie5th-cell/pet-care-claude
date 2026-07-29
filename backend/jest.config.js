@@ -10,17 +10,13 @@ module.exports = {
     '!src/index.ts',
   ],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  // These suites write documents and then read them back, so they need a real
-  // Firestore. jest.setup.js stubs db.collection out, which makes every one of
-  // them fail. They are excluded so `npm test` reports real status; run them
-  // against `firebase emulators:exec` once emulator config lands.
+  // Most suites now run against the in-memory fake in jest.setup.js. These three
+  // still assume a real Firestore (cross-collection writes read back through
+  // paths the fake does not model yet); run them under `firebase emulators:exec`.
   testPathIgnorePatterns: [
     '/node_modules/',
-    '<rootDir>/src/__tests__/services/review.test.ts',
-    '<rootDir>/src/__tests__/services/notifications.test.ts',
-    '<rootDir>/src/__tests__/services/recommendations.test.ts',
-    '<rootDir>/src/__tests__/services/playdate.test.ts',
-    '<rootDir>/src/__tests__/routes/playdate.test.ts',
+    // Shared fakes, not suites — testMatch globs the whole __tests__ tree.
+    '<rootDir>/src/__tests__/helpers/',
     '<rootDir>/src/__tests__/integration/booking-review-notification.test.ts',
     '<rootDir>/src/__tests__/integration/playdate-matching.test.ts',
     '<rootDir>/tests/e2e-analytics.test.ts',

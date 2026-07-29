@@ -1,4 +1,23 @@
 import { calculateDistance, getPlaydateMatches } from '../../services/geo-matching';
+import { db } from '../../config/firebase';
+import type { FakeFirestore } from '../helpers/fake-firestore';
+
+const fake = db as unknown as FakeFirestore;
+
+const JAKARTA = { lat: -6.2088, lng: 106.8456 };
+
+const post = (over: Record<string, unknown> = {}) => ({
+  ownerId: 'owner-1',
+  petName: 'Rex',
+  breed: 'Labrador',
+  age: 3,
+  photo: 'https://example.test/rex.jpg',
+  location: { lat: -6.2146, lng: 106.8556, address: 'Menteng' },
+  date: '2026-08-01T10:00:00.000Z',
+  description: 'Morning walk',
+  status: 'active',
+  ...over,
+});
 
 describe('Geo-Matching Service', () => {
   describe('calculateDistance', () => {
@@ -14,63 +33,115 @@ describe('Geo-Matching Service', () => {
     });
   });
 
-  // Needs a real Firestore: getPlaydateMatches reads playdate_posts, users and
-  // pets, and jest.setup.js stubs db.collection out. Re-enable under
-  // `firebase emulators:exec`.
-  describe.skip('getPlaydateMatches', () => {
+  describe('getPlaydateMatches', () => {
+    beforeEach(() => {
+      fake.reset();
+      fake.seed('pets', { 'pet-123': { ownerId: 'me', name: 'Buddy', breed: 'Labrador', age: 3 } });
+      fake.seed('users', {
+        'owner-1': { subscription_status: 'free' },
+        'owner-premium': { subscription_status: 'active' },
+      });
+    });
+
+    it('throws when the pet does not exist', async () => {
+      await expect(getPlaydateMatches(JAKARTA.lat, JAKARTA.lng, 'nope')).rejects.toThrow(
+        'Pet not found'
+      );
+    });
+
     it('returns empty array when no posts exist', async () => {
-      const matches = await getPlaydateMatches(-6.2088, 106.8456, 'pet-123', 5, 'score');
-      expect(Array.isArray(matches)).toBe(true);
+      const matches = await getPlaydateMatches(JAKARTA.lat, JAKARTA.lng, 'pet-123', 5, 'score');
+      expect(matches).toEqual([]);
+    });
+
+    it('ignores posts that are not active', async () => {
+      fake.seed('playdate_posts', {
+        'p-done': post({ status: 'completed' }),
+        'p-live': post(),
+      });
+
+      const matches = await getPlaydateMatches(JAKARTA.lat, JAKARTA.lng, 'pet-123', 5, 'score');
+      expect(matches.map(m => m.postId)).toEqual(['p-live']);
     });
 
     it('filters by radius in kilometers', async () => {
-      const nearbyMatches = await getPlaydateMatches(-6.2088, 106.8456, 'pet-123', 1, 'score');
-      const distantMatches = await getPlaydateMatches(-6.2088, 106.8456, 'pet-123', 50, 'score');
+      fake.seed('playdate_posts', {
+        'p-near': post(),
+        // Bandung, ~120km from Jakarta.
+        'p-far': post({ location: { lat: -6.9175, lng: 107.6191 } }),
+      });
 
-      expect(nearbyMatches.length).toBeLessThanOrEqual(distantMatches.length);
+      const near = await getPlaydateMatches(JAKARTA.lat, JAKARTA.lng, 'pet-123', 5, 'score');
+      const wide = await getPlaydateMatches(JAKARTA.lat, JAKARTA.lng, 'pet-123', 200, 'score');
+
+      expect(near.map(m => m.postId)).toEqual(['p-near']);
+      expect(wide).toHaveLength(2);
     });
 
-    it('sorts by score (distance + breed + age)', async () => {
-      const matches = await getPlaydateMatches(-6.2088, 106.8456, 'pet-123', 20, 'score');
+    // Scores are compared near the radius edge on purpose: calculateMatchScore
+    // starts at 100 minus a distance penalty, so nearby posts saturate the 100
+    // cap and the breed bonus becomes unobservable.
+    const FAR = { lat: -6.2488, lng: 106.8456 };
 
-      if (matches.length > 1) {
-        for (let i = 1; i < matches.length; i++) {
-          expect(matches[i - 1].match_score).toBeGreaterThanOrEqual(matches[i].match_score);
-        }
-      }
+    it('scores same breed above an unrelated breed at equal distance', async () => {
+      fake.seed('playdate_posts', {
+        'p-same': post({ breed: 'Labrador', location: FAR }),
+        'p-other': post({ breed: 'Capybara', location: FAR }),
+      });
+
+      const matches = await getPlaydateMatches(JAKARTA.lat, JAKARTA.lng, 'pet-123', 5, 'score');
+      expect(matches.map(m => m.postId)).toEqual(['p-same', 'p-other']);
+      expect(matches[0].match_score).toBeGreaterThan(matches[1].match_score);
+    });
+
+    it('gives a similar-breed bonus to another dog breed', async () => {
+      fake.seed('playdate_posts', {
+        'p-dog': post({ breed: 'Beagle', location: FAR }),
+        'p-other': post({ breed: 'Capybara', location: FAR }),
+      });
+
+      const matches = await getPlaydateMatches(JAKARTA.lat, JAKARTA.lng, 'pet-123', 5, 'score');
+      const dog = matches.find(m => m.postId === 'p-dog');
+      const other = matches.find(m => m.postId === 'p-other');
+      expect(dog?.match_score).toBeGreaterThan(other?.match_score ?? 0);
     });
 
     it('sorts by recent when sort=recent', async () => {
-      const matches = await getPlaydateMatches(-6.2088, 106.8456, 'pet-123', 20, 'recent');
-
-      if (matches.length > 1) {
-        for (let i = 1; i < matches.length; i++) {
-          const prevDate = new Date(matches[i - 1].date).getTime();
-          const currDate = new Date(matches[i].date).getTime();
-          expect(prevDate).toBeGreaterThanOrEqual(currDate);
-        }
-      }
-    });
-
-    it('includes distance_km and match_score in results', async () => {
-      const matches = await getPlaydateMatches(-6.2088, 106.8456, 'pet-123', 10, 'score');
-
-      if (matches.length > 0) {
-        const match = matches[0];
-        expect(match.distance_km).toBeDefined();
-        expect(match.match_score).toBeDefined();
-        expect(typeof match.distance_km).toBe('number');
-        expect(typeof match.match_score).toBe('number');
-      }
-    });
-
-    it('score is 0-100 range', async () => {
-      const matches = await getPlaydateMatches(-6.2088, 106.8456, 'pet-123', 20, 'score');
-
-      matches.forEach(match => {
-        expect(match.match_score).toBeGreaterThanOrEqual(0);
-        expect(match.match_score).toBeLessThanOrEqual(100);
+      fake.seed('playdate_posts', {
+        'p-old': post({ date: '2026-07-01T10:00:00.000Z' }),
+        'p-new': post({ date: '2026-09-01T10:00:00.000Z' }),
       });
+
+      const matches = await getPlaydateMatches(JAKARTA.lat, JAKARTA.lng, 'pet-123', 5, 'recent');
+      expect(matches.map(m => m.postId)).toEqual(['p-new', 'p-old']);
+    });
+
+    it('includes rounded distance_km and a 0-100 match_score', async () => {
+      fake.seed('playdate_posts', { 'p-1': post() });
+
+      const [match] = await getPlaydateMatches(JAKARTA.lat, JAKARTA.lng, 'pet-123', 5, 'score');
+      expect(match.distance_km).toBeCloseTo(1.29, 1);
+      expect(match.match_score).toBeGreaterThanOrEqual(0);
+      expect(match.match_score).toBeLessThanOrEqual(100);
+      expect(Number.isInteger(match.match_score)).toBe(true);
+      expect(match).toMatchObject({
+        postId: 'p-1',
+        ownerId: 'owner-1',
+        petName: 'Rex',
+        breed: 'Labrador',
+        age: 3,
+        description: 'Morning walk',
+      });
+    });
+
+    it('caps the score at 100 for a premium owner at zero distance', async () => {
+      fake.seed('playdate_posts', {
+        'p-1': post({ ownerId: 'owner-premium', location: { lat: JAKARTA.lat, lng: JAKARTA.lng } }),
+      });
+
+      const [match] = await getPlaydateMatches(JAKARTA.lat, JAKARTA.lng, 'pet-123', 5, 'score');
+      expect(match.distance_km).toBe(0);
+      expect(match.match_score).toBe(100);
     });
   });
 });

@@ -8,8 +8,23 @@ import {
   markNotificationAsRead,
 } from '../../services/notifications';
 
-jest.mock('../../config/firebase');
-jest.mock('@react-native-firebase/messaging');
+// config/firebase is already faked in jest.setup.js. The old
+// jest.mock('@react-native-firebase/messaging') here was copy-pasted from the
+// mobile app — that package is not a backend dependency.
+
+// sendFCMNotification bails out before writing user_notifications when the user
+// has no registered device, so every send in this suite registers a token first.
+const sendTo = async (
+  userId: string,
+  type: 'booking' | 'playdate_match' | 'reminder' | 'message',
+  title: string,
+  body: string,
+  data?: Record<string, string>,
+  deeplink?: string
+) => {
+  await registerFCMToken(userId, `token-${userId}`, 'Android');
+  return sendFCMNotification(userId, type, title, body, data, deeplink);
+};
 
 describe('Notifications Service', () => {
   describe('registerFCMToken', () => {
@@ -58,7 +73,7 @@ describe('Notifications Service', () => {
 
   describe('sendFCMNotification', () => {
     it('saves notification to Firestore', async () => {
-      await sendFCMNotification(
+      await sendTo(
         'user-123',
         'booking',
         'Test Title',
@@ -78,7 +93,7 @@ describe('Notifications Service', () => {
       const data = { bookingId: 'b-1' };
       const deeplink = 'app://test';
 
-      await sendFCMNotification(
+      await sendTo(
         'user-test',
         'reminder',
         'Reminder Title',
@@ -111,7 +126,7 @@ describe('Notifications Service', () => {
       ];
 
       for (const type of types) {
-        await sendFCMNotification('user-type-test', type, 'Title', 'Body');
+        await sendTo('user-type-test', type, 'Title', 'Body');
       }
 
       const snapshot = await db
@@ -126,9 +141,9 @@ describe('Notifications Service', () => {
   describe('getUserNotifications', () => {
     it('returns notifications ordered by sent_at descending', async () => {
       const userId = 'user-order-test';
-      await sendFCMNotification(userId, 'booking', 'First', 'Body 1');
+      await sendTo(userId, 'booking', 'First', 'Body 1');
       await new Promise(resolve => setTimeout(resolve, 100));
-      await sendFCMNotification(userId, 'reminder', 'Second', 'Body 2');
+      await sendTo(userId, 'reminder', 'Second', 'Body 2');
 
       const result = await getUserNotifications(userId);
       expect(result.notifications.length).toBeGreaterThanOrEqual(2);
@@ -138,7 +153,7 @@ describe('Notifications Service', () => {
     it('respects limit parameter', async () => {
       const userId = 'user-limit-test';
       for (let i = 0; i < 5; i++) {
-        await sendFCMNotification(userId, 'booking', `Notif ${i}`, `Body ${i}`);
+        await sendTo(userId, 'booking', `Notif ${i}`, `Body ${i}`);
       }
 
       const limited = await getUserNotifications(userId, false, 2, 0);
@@ -165,7 +180,7 @@ describe('Notifications Service', () => {
     it('includes total count', async () => {
       const userId = 'user-count-test';
       for (let i = 0; i < 3; i++) {
-        await sendFCMNotification(userId, 'booking', `Notif ${i}`, `Body`);
+        await sendTo(userId, 'booking', `Notif ${i}`, `Body`);
       }
 
       const result = await getUserNotifications(userId);

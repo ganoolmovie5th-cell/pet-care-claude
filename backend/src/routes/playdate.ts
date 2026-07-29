@@ -135,6 +135,10 @@ router.get('/chat/:chatId', authenticateToken, async (req, res, next) => {
 router.post('/chat/:chatId/message', authenticateToken, async (req, res, next) => {
   try {
     const { text } = req.body;
+    if (typeof text !== 'string' || text.trim() === '') {
+      res.status(400).json({ error: 'Message text is required' });
+      return;
+    }
     await addMessageToChat(req.params.chatId, req.userId || 'test-user', text);
     res.json({ success: true });
   } catch (err) {
