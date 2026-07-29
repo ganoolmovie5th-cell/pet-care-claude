@@ -49,9 +49,11 @@ const calculateMatchScore = (
 ): number => {
   let score = 0;
 
-  // Distance penalty (0-40 points)
-  const distancePenalty = (distance_km / radiusKm) * 40;
-  score += Math.max(0, 100 - distancePenalty);
+  // Distance is worth 65 and the bonuses below are worth 35, so a perfect match
+  // lands on exactly 100. Starting from 100 here made every nearby post hit the
+  // cap and hid the breed, age and premium bonuses entirely.
+  const distancePenalty = (distance_km / radiusKm) * 65;
+  score += Math.max(0, 65 - distancePenalty);
 
   // Breed bonus
   if (sameBreed) {

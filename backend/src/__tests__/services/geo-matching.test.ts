@@ -78,15 +78,10 @@ describe('Geo-Matching Service', () => {
       expect(wide).toHaveLength(2);
     });
 
-    // Scores are compared near the radius edge on purpose: calculateMatchScore
-    // starts at 100 minus a distance penalty, so nearby posts saturate the 100
-    // cap and the breed bonus becomes unobservable.
-    const FAR = { lat: -6.2488, lng: 106.8456 };
-
     it('scores same breed above an unrelated breed at equal distance', async () => {
       fake.seed('playdate_posts', {
-        'p-same': post({ breed: 'Labrador', location: FAR }),
-        'p-other': post({ breed: 'Capybara', location: FAR }),
+        'p-same': post({ breed: 'Labrador' }),
+        'p-other': post({ breed: 'Capybara' }),
       });
 
       const matches = await getPlaydateMatches(JAKARTA.lat, JAKARTA.lng, 'pet-123', 5, 'score');
@@ -96,14 +91,24 @@ describe('Geo-Matching Service', () => {
 
     it('gives a similar-breed bonus to another dog breed', async () => {
       fake.seed('playdate_posts', {
-        'p-dog': post({ breed: 'Beagle', location: FAR }),
-        'p-other': post({ breed: 'Capybara', location: FAR }),
+        'p-dog': post({ breed: 'Beagle' }),
+        'p-other': post({ breed: 'Capybara' }),
       });
 
       const matches = await getPlaydateMatches(JAKARTA.lat, JAKARTA.lng, 'pet-123', 5, 'score');
       const dog = matches.find(m => m.postId === 'p-dog');
       const other = matches.find(m => m.postId === 'p-other');
       expect(dog?.match_score).toBeGreaterThan(other?.match_score ?? 0);
+    });
+
+    it('still ranks a closer post above a farther identical one', async () => {
+      fake.seed('playdate_posts', {
+        'p-near': post(),
+        'p-far': post({ location: { lat: -6.2488, lng: 106.8456 } }),
+      });
+
+      const matches = await getPlaydateMatches(JAKARTA.lat, JAKARTA.lng, 'pet-123', 5, 'score');
+      expect(matches.map(m => m.postId)).toEqual(['p-near', 'p-far']);
     });
 
     it('sorts by recent when sort=recent', async () => {
