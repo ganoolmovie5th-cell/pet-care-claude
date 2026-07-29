@@ -1,10 +1,19 @@
 import request from 'supertest';
 import app from '../../index';
+import { auth } from '../../config/firebase';
+
+// authenticateToken now really verifies the bearer token, so the fake resolves
+// each token string to its own uid. That makes the ownership checks meaningful.
+const mockVerify = auth.verifyIdToken as jest.Mock;
 
 describe('Playdate Routes', () => {
   let postId: string;
   let chatId: string;
-  const authToken = 'Bearer test-token'; // Mock token for testing
+  const authToken = 'Bearer test-token';
+
+  beforeAll(() => {
+    mockVerify.mockImplementation(async (token: string) => ({ uid: `uid-${token}` }));
+  });
 
   describe('POST /playdate/posts', () => {
     it('should create a playdate post', async () => {
@@ -207,26 +216,31 @@ describe('Playdate Routes', () => {
   });
 
   describe('Authorization & Ownership', () => {
-    // authenticateToken (src/middleware/auth.ts) still hardcodes
-    // req.userId = 'user-from-token' behind a `TODO: Verify JWT token`, so a
-    // different bearer token resolves to the same user and the service-layer
-    // ownership check cannot reject it. This asserts today's behaviour; flip the
-    // expectation to 404/403 once token verification is wired up.
-    it('does not yet distinguish users, because tokens are not verified', async () => {
-      const otherUserToken = 'Bearer other-user-token';
+    it('hides the post from a different user, so the update is rejected', async () => {
       const response = await request(app)
         .patch(`/playdate/posts/${postId}`)
-        .set('Authorization', otherUserToken)
+        .set('Authorization', 'Bearer other-user-token')
         .send({
           description: 'Hacked!',
         });
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(404);
     });
 
     it('rejects a request with no token at all', async () => {
       const response = await request(app)
         .patch(`/playdate/posts/${postId}`)
+        .send({ description: 'Hacked!' });
+
+      expect(response.status).toBe(401);
+    });
+
+    it('rejects a token the verifier refuses', async () => {
+      mockVerify.mockRejectedValueOnce(new Error('expired'));
+
+      const response = await request(app)
+        .patch(`/playdate/posts/${postId}`)
+        .set('Authorization', 'Bearer expired-token')
         .send({ description: 'Hacked!' });
 
       expect(response.status).toBe(401);
