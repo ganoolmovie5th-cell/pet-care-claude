@@ -130,6 +130,9 @@ export class FakeFirestore {
     return {
       id,
       get: async () => this.snapshotFor(collection, id),
+      // Subcollections are flattened into a "parent/id/sub" key, which is enough
+      // for chat.ts; collection-group queries would need real nesting.
+      collection: (sub: string) => new FakeQuery(this, `${collection}/${id}/${sub}`, []),
       set: async (data: Doc) => {
         c.set(id, { ...data });
       },

@@ -35,23 +35,24 @@ export async function getOrCreateChat(matchId: string, userId1: string, userId2:
     } as Chat;
   }
 
-  const newChat: Chat = {
-    id: '',
+  // `id` is not persisted: it used to be written as '' and, because the reuse
+  // path above spreads doc.data() after doc.id, that blank overwrote the real id.
+  const chat = {
     participants: [userId1, userId2],
     matchId,
     createdAt: new Date().toISOString(),
   };
 
-  const ref = await chatsRef.add(newChat);
-  newChat.id = ref.id;
-  return newChat;
+  const ref = await chatsRef.add(chat);
+  return { id: ref.id, ...chat };
 }
 
 export async function sendMessage(chatId: string, senderId: string, text: string): Promise<ChatMessage> {
   const messagesRef = db.collection('chats').doc(chatId).collection('messages');
 
-  const newMessage: ChatMessage = {
-    id: '',
+  // Same as getOrCreateChat: not persisting `id`, so getMessages' spread of
+  // doc.data() cannot blank out the real document id.
+  const newMessage = {
     chatId,
     senderId,
     text,
@@ -60,7 +61,6 @@ export async function sendMessage(chatId: string, senderId: string, text: string
   };
 
   const ref = await messagesRef.add(newMessage);
-  newMessage.id = ref.id;
 
   // Update parent chat lastMessage
   await db.collection('chats').doc(chatId).update({
@@ -68,7 +68,7 @@ export async function sendMessage(chatId: string, senderId: string, text: string
     lastMessageTime: new Date().toISOString(),
   });
 
-  return newMessage;
+  return { id: ref.id, ...newMessage };
 }
 
 export async function getMessages(chatId: string, limit: number = 50): Promise<ChatMessage[]> {
