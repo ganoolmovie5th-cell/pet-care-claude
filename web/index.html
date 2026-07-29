@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="id">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
@@ -11,7 +11,50 @@
       content="B_hhk9k9h0XhVQcC9Se4e0_w5MpJH9zph-IHe7cIXbY"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pet Care Community - Vet Dashboard</title>
+    <title>Pet Care Community — Dashboard Vet</title>
+    <meta
+      name="description"
+      content="Dashboard vet Pet Care Community: kelola jadwal booking, catatan kesehatan hewan, dan ulasan klien dalam satu tempat."
+    />
+    <link rel="canonical" href="https://www.pet-care.web.id/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="id_ID" />
+    <meta property="og:url" content="https://www.pet-care.web.id/" />
+    <meta property="og:title" content="Pet Care Community — Dashboard Vet" />
+    <meta
+      property="og:description"
+      content="Dashboard vet Pet Care Community: kelola jadwal booking, catatan kesehatan hewan, dan ulasan klien dalam satu tempat."
+    />
+    <meta property="og:image" content="https://www.pet-care.web.id/logo.svg" />
+    <!-- Static graph lives here because the dashboard is client-rendered:
+         crawlers only ever see this file, so JSON-LD injected from React is invisible. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://www.pet-care.web.id/#website",
+            "url": "https://www.pet-care.web.id/",
+            "name": "Pet Care Community",
+            "description": "Marketplace pet care Indonesia — booking vet, catatan kesehatan hewan, dan komunitas pemilik hewan.",
+            "inLanguage": "id-ID",
+            "publisher": { "@id": "https://www.pet-care.web.id/#organization" }
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://www.pet-care.web.id/#organization",
+            "name": "Pet Care Community",
+            "url": "https://www.pet-care.web.id/",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://www.pet-care.web.id/logo.svg"
+            },
+            "areaServed": { "@type": "Country", "name": "Indonesia" }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

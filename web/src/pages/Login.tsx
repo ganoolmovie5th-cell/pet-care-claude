@@ -25,7 +25,7 @@ export default function Login() {
   };
 
   return (
-    <div className="login-page">
+    <main className="login-page">
       <form className="card login-card" onSubmit={submit}>
         <img src="/logo.svg" alt="" width={56} height={56} />
         <h1>Vet Dashboard</h1>
@@ -68,6 +68,6 @@ export default function Login() {
           {busy ? 'Masuk…' : 'Masuk'}
         </button>
       </form>
-    </div>
+    </main>
   );
 }

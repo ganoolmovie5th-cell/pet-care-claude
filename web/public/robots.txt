@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /$
+Allow: /login
+Disallow: /bookings
+Disallow: /reviews
+
+Sitemap: https://www.pet-care.web.id/sitemap.xml
