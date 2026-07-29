@@ -27,7 +27,7 @@ export const sendVaccinationReminders = functions.pubsub
       let sent = 0;
 
       for (const doc of snapshot.docs) {
-        const record = doc.data() as any;
+        const record = doc.data() as { petId: string; vaccine_name: string };
         const { petId, vaccine_name } = record;
 
         try {
@@ -35,7 +35,7 @@ export const sendVaccinationReminders = functions.pubsub
           const petDoc = await db.collection('pets').doc(petId).get();
           if (!petDoc.exists) continue;
 
-          const pet = petDoc.data() as any;
+          const pet = petDoc.data() as { ownerId: string; name: string };
           const { ownerId, name: petName } = pet;
 
           // Send reminder

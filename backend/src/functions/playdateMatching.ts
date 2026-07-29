@@ -28,7 +28,7 @@ export const notifyPlaydateInterest = functions.firestore
 
       // Get post owner's pet name
       const petDoc = await db.collection('pets').doc(post.petId).get();
-      const petName = petDoc.exists ? (petDoc.data() as any).name : 'A pet';
+      const petName = petDoc.data()?.name ?? 'A pet';
 
       // Send notification to post owner
       await sendPlaydateMatch(postOwnerId, interestedOwnerName, petName, postId);

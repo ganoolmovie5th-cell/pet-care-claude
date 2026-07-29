@@ -66,7 +66,7 @@ export async function getInvoiceById(invoiceId: string): Promise<PaymentInvoice 
 }
 
 export async function updateInvoiceStatus(invoiceId: string, status: PaymentInvoice['status'], paidAt?: string): Promise<void> {
-  const updateData: any = { status };
+  const updateData: Partial<PaymentInvoice> = { status };
   if (paidAt) updateData.paidAt = paidAt;
   await db.collection('payment_invoices').doc(invoiceId).update(updateData);
 }

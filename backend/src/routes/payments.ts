@@ -7,7 +7,7 @@ const router: Router = express.Router();
 router.post('/create-invoice', async (req: Request, res: Response) => {
   try {
     const { bookingId, amount, description } = req.body;
-    const userId = (req as any).user?.uid;
+    const userId = req.user?.uid;
 
     if (!bookingId || !amount || !userId) {
       return res.status(400).json({ error: 'Missing required fields' });

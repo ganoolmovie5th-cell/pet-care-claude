@@ -1,4 +1,4 @@
-import { db, admin } from '../../config/firebase';
+import { db } from '../../config/firebase';
 import {
   registerFCMToken,
   getFCMTokensByUserId,
@@ -20,7 +20,7 @@ describe('Notifications Service', () => {
     });
 
     it('sets created_at timestamp', async () => {
-      const docId = await registerFCMToken('user-456', 'token-xyz', 'Android');
+      await registerFCMToken('user-456', 'token-xyz', 'Android');
       const doc = await db.collection('fcm_tokens').doc(docId).get();
       expect(doc.data()?.created_at).toBeDefined();
     });
@@ -48,7 +48,7 @@ describe('Notifications Service', () => {
   describe('removeFCMToken', () => {
     it('removes token from database', async () => {
       const userId = 'user-remove-test';
-      const docId = await registerFCMToken(userId, 'token-remove', 'iOS');
+      await registerFCMToken(userId, 'token-remove', 'iOS');
 
       await removeFCMToken('token-remove');
       const tokens = await getFCMTokensByUserId(userId);

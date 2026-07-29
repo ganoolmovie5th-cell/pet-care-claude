@@ -18,16 +18,17 @@ export class AppError extends Error implements ApiError {
   }
 }
 
-export const errorHandler = (err: any, _req: Request, res: Response, _next: NextFunction) => {
-  const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal server error';
-  const userMessage = err.userMessage || 'Terjadi kesalahan. Coba lagi nanti.';
+export const errorHandler = (err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  const e = err as Partial<ApiError>;
+  const statusCode = e.statusCode || 500;
+  const message = e.message || 'Internal server error';
+  const userMessage = e.userMessage || 'Terjadi kesalahan. Coba lagi nanti.';
 
   console.error(`[Error ${statusCode}] ${message}`, err);
 
   // Log error to analytics (async, don't wait)
-  if ((_req as any).user?.uid) {
-    logEvent((_req as any).user.uid, 'error_occurred', {
+  if (_req.user?.uid) {
+    logEvent(_req.user.uid, 'error_occurred', {
       statusCode,
       message,
       path: _req.path,
@@ -41,6 +42,9 @@ export const errorHandler = (err: any, _req: Request, res: Response, _next: Next
   });
 };
 
-export const asyncHandler = (fn: Function) => (req: Request, res: Response, next: NextFunction) => {
-  Promise.resolve(fn(req, res, next)).catch(next);
-};
+type AsyncRoute = (req: Request, res: Response, next: NextFunction) => unknown;
+
+export const asyncHandler =
+  (fn: AsyncRoute) => (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };

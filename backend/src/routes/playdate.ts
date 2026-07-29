@@ -21,7 +21,7 @@ router.post('/posts', authenticateToken, async (req, res, next) => {
   try {
     const post = await createPlaydatePost({
       ...req.body,
-      ownerId: (req as any).userId || 'test-user',
+      ownerId: req.userId || 'test-user',
       interested_owners: [],
     });
     res.json({ id: post.id, created_at: post.created_at });
@@ -46,7 +46,7 @@ router.get('/posts/:postId', authenticateToken, async (req, res, next) => {
 router.patch('/posts/:postId', authenticateToken, async (req, res, next) => {
   try {
     const post = await getPlaydatePost(req.params.postId);
-    if (!post || post.ownerId !== ((req as any).userId || 'test-user')) {
+    if (!post || post.ownerId !== (req.userId || 'test-user')) {
       res.status(404).json({ error: 'Post not found' });
       return;
     }
@@ -59,7 +59,7 @@ router.patch('/posts/:postId', authenticateToken, async (req, res, next) => {
 
 router.get('/posts/owner/mine', authenticateToken, async (req, res, next) => {
   try {
-    const posts = await getPlaydatePostsByOwner((req as any).userId || 'test-user');
+    const posts = await getPlaydatePostsByOwner(req.userId || 'test-user');
     res.json(posts);
   } catch (err) {
     next(err);
@@ -78,7 +78,7 @@ router.get('/posts/active/all', authenticateToken, async (_req, res, next) => {
 // Interest
 router.post('/posts/:postId/interested', authenticateToken, async (req, res, next) => {
   try {
-    await addInterestedOwner(req.params.postId, (req as any).userId || 'test-user');
+    await addInterestedOwner(req.params.postId, req.userId || 'test-user');
     res.json({ success: true });
   } catch (err) {
     next(err);
@@ -87,7 +87,7 @@ router.post('/posts/:postId/interested', authenticateToken, async (req, res, nex
 
 router.delete('/posts/:postId/interested', authenticateToken, async (req, res, next) => {
   try {
-    await removeInterestedOwner(req.params.postId, (req as any).userId || 'test-user');
+    await removeInterestedOwner(req.params.postId, req.userId || 'test-user');
     res.json({ success: true });
   } catch (err) {
     next(err);
@@ -100,7 +100,7 @@ router.post('/posts/:postId/chat/start', authenticateToken, async (req, res, nex
     const { interestedOwnerId, initialMessage } = req.body;
     const chat = await createPlaydateChat(
       req.params.postId,
-      (req as any).userId || 'test-user',
+      req.userId || 'test-user',
       interestedOwnerId,
       initialMessage
     );
@@ -135,7 +135,7 @@ router.get('/chat/:chatId', authenticateToken, async (req, res, next) => {
 router.post('/chat/:chatId/message', authenticateToken, async (req, res, next) => {
   try {
     const { text } = req.body;
-    await addMessageToChat(req.params.chatId, (req as any).userId || 'test-user', text);
+    await addMessageToChat(req.params.chatId, req.userId || 'test-user', text);
     res.json({ success: true });
   } catch (err) {
     next(err);

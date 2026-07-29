@@ -15,7 +15,7 @@ export async function exportAnalyticsToBigQuery(): Promise<{ exported: number }>
 
   if (snapshot.empty) return { exported: 0 };
 
-  const rows = formatEventsForBigQuery(snapshot.docs as any);
+  const rows = formatEventsForBigQuery(snapshot.docs);
   await insertRows(rows);
   return { exported: rows.length };
 }

@@ -1,4 +1,5 @@
 import express, { Router, Request, Response } from 'express';
+import * as crypto from 'crypto';
 import { auth } from '../config/firebase';
 import { createOrUpdateUser } from '../services/user';
 
@@ -16,7 +17,6 @@ const generateJWT = (userId: string): string => {
   };
   const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64');
   const secret = process.env.JWT_SECRET || 'dev-secret-key';
-  const crypto = require('crypto');
   const hmac = crypto.createHmac('sha256', secret);
   hmac.update(`${Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64')}.${encodedPayload}`);
   const signature = hmac.digest('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');

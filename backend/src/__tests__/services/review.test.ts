@@ -60,7 +60,7 @@ describe('Review Service', () => {
 
     it('sorts by helpful count', async () => {
       const vetId = 'vet-helpful-sort';
-      const id1 = await createReview({ ...mockReviewData, targetId: vetId, rating: 4 });
+      await createReview({ ...mockReviewData, targetId: vetId, rating: 4 });
       const id2 = await createReview({ ...mockReviewData, targetId: vetId, rating: 5 });
 
       await incrementHelpfulCount(id2);
@@ -73,7 +73,7 @@ describe('Review Service', () => {
 
   describe('incrementHelpfulCount', () => {
     it('increments helpful_count field', async () => {
-      const id = await createReview(mockReviewData);
+      await createReview(mockReviewData);
       await incrementHelpfulCount(id);
       await incrementHelpfulCount(id);
 
@@ -82,7 +82,7 @@ describe('Review Service', () => {
     });
 
     it('updates updated_at timestamp', async () => {
-      const id = await createReview(mockReviewData);
+      await createReview(mockReviewData);
       const before = new Date().getTime();
       await incrementHelpfulCount(id);
       const after = new Date().getTime();
@@ -132,14 +132,14 @@ describe('Review Service', () => {
     });
 
     it('returns true when review exists', async () => {
-      const id = await createReview(mockReviewData);
+      await createReview(mockReviewData);
       const exists = await checkReviewExists(mockReviewData.reviewerId, mockReviewData.targetId);
       expect(exists).toBe(true);
     });
 
     it('checks bookingId when provided', async () => {
       const bookingId = 'booking-123';
-      const id = await createReview({ ...mockReviewData, bookingId });
+      await createReview({ ...mockReviewData, bookingId });
       const exists = await checkReviewExists(mockReviewData.reviewerId, mockReviewData.targetId, bookingId);
       expect(exists).toBe(true);
 

@@ -144,7 +144,7 @@ export const sendFCMNotification = async (
         await admin.messaging().sendToDevice(token, message);
       } catch (error) {
         console.error(`Error sending to token ${token}:`, error);
-        if ((error as any).code === 'messaging/invalid-registration-token') {
+        if ((error as { code?: string }).code === 'messaging/invalid-registration-token') {
           await removeFCMToken(token);
         }
       }

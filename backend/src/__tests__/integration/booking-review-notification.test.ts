@@ -1,5 +1,5 @@
-import { db, admin } from '../../config/firebase';
-import { createBooking, getBookingById, updateBookingStatus } from '../../services/booking';
+import { db } from '../../config/firebase';
+import { createBooking, getBookingById } from '../../services/booking';
 import { createReview, calculateVetRating } from '../../services/review';
 import { sendBookingConfirmationBoth } from '../../services/notifications';
 

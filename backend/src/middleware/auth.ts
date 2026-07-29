@@ -9,6 +9,6 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
   }
 
   // TODO: Verify JWT token
-  (req as any).userId = 'user-from-token'; // Placeholder
+  req.userId = 'user-from-token'; // Placeholder
   return next();
 };

@@ -51,7 +51,7 @@ export const getReviewsByTargetId = async (
   limit: number = 10,
   offset: number = 0
 ): Promise<{ reviews: Review[]; total: number }> => {
-  let query = db.collection('reviews').where('targetId', '==', targetId).where('type', '==', type);
+  const query = db.collection('reviews').where('targetId', '==', targetId).where('type', '==', type);
 
   const countSnapshot = await query.get();
   const total = countSnapshot.size;

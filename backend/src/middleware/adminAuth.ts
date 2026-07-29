@@ -17,7 +17,7 @@ export const adminAuth = async (req: Request, res: Response, next: NextFunction)
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    (req as any).userId = decodedToken.uid;
+    req.userId = decodedToken.uid;
     return next();
   } catch (error) {
     console.error('Admin auth error:', error);

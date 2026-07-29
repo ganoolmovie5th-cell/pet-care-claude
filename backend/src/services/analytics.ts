@@ -4,7 +4,7 @@ export interface AnalyticsEvent {
   id: string;
   userId: string;
   eventType: 'booking_created' | 'payment_completed' | 'playdate_posted' | 'insurance_clicked' | 'screen_view' | 'error_occurred';
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   timestamp: string;
 }
 
@@ -12,7 +12,7 @@ export interface AnalyticsEventInput {
   eventType: string;
   userId?: string;
   vetId?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export async function logAnalyticsEvent(event: AnalyticsEventInput): Promise<string> {
@@ -49,7 +49,7 @@ export async function getEventStats(
 export async function logEvent(
   userId: string,
   eventType: AnalyticsEvent['eventType'],
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): Promise<string> {
   const docRef = await db.collection('analytics_events').add({
     userId,
@@ -79,7 +79,7 @@ export async function getDailyMetrics(date: string): Promise<{
 
   let bookingsCreated = 0;
   let paymentsCompleted = 0;
-  let uniqueUsers = new Set<string>();
+  const uniqueUsers = new Set<string>();
   let totalRevenue = 0;
 
   snapshot.forEach(doc => {
@@ -90,7 +90,7 @@ export async function getDailyMetrics(date: string): Promise<{
       bookingsCreated++;
     } else if (event.eventType === 'payment_completed') {
       paymentsCompleted++;
-      totalRevenue += event.metadata?.amount || 0;
+      totalRevenue += Number(event.metadata?.amount) || 0;
     }
   });
 
@@ -102,8 +102,16 @@ export async function getDailyMetrics(date: string): Promise<{
   };
 }
 
-export async function getMetricsRange(startDate: string, endDate: string): Promise<any[]> {
-  const metrics = [];
+export interface DailyMetrics {
+  date: string;
+  bookingsCreated: number;
+  paymentsCompleted: number;
+  totalRevenue: number;
+  uniqueUsers: number;
+}
+
+export async function getMetricsRange(startDate: string, endDate: string): Promise<DailyMetrics[]> {
+  const metrics: DailyMetrics[] = [];
   const current = new Date(startDate);
   const end = new Date(endDate);
 

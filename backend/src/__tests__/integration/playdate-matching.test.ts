@@ -106,7 +106,7 @@ describe('Integration: Playdate Posting → Geo-Matching → Interest → Notifi
 
   describe('Geo-matching distance calculation', () => {
     it('filters posts within radius', async () => {
-      const closePost = await db.collection('playdate_posts').add({
+      await db.collection('playdate_posts').add({
         ownerId: mockOwner1.id,
         petId: mockPet1.id,
         petName: 'Max',
@@ -121,7 +121,7 @@ describe('Integration: Playdate Posting → Geo-Matching → Interest → Notifi
         created_at: new Date().toISOString(),
       });
 
-      const farPost = await db.collection('playdate_posts').add({
+      await db.collection('playdate_posts').add({
         ownerId: 'owner-3',
         petId: 'pet-3',
         petName: 'Max',

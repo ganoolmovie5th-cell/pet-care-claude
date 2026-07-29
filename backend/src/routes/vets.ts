@@ -18,9 +18,7 @@ router.post('/', async (req: Request, res: Response) => {
       phone,
       email,
       status: 'pending',
-      subscription_id: null,
-      subscription_status: 'pending',
-    } as any);
+    });
 
     return res.status(201).json(vet);
   } catch (error) {

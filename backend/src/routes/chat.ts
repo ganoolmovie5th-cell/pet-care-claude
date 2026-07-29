@@ -8,7 +8,11 @@ const router = express.Router();
 router.post('/', authenticateToken, async (req: Request, res: Response) => {
   try {
     const { matchId, otherUserId } = req.body;
-    const userId = (req as any).userId;
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
     if (!matchId || !otherUserId) {
       return res.status(400).json({ error: 'matchId and otherUserId required' });
@@ -27,7 +31,11 @@ router.post('/:chatId/message', authenticateToken, async (req: Request, res: Res
   try {
     const { chatId } = req.params;
     const { text } = req.body;
-    const userId = (req as any).userId;
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
     if (!text) {
       return res.status(400).json({ error: 'text required' });
@@ -59,7 +67,11 @@ router.get('/:chatId/messages', authenticateToken, async (req: Request, res: Res
 router.post('/:chatId/read', authenticateToken, async (req: Request, res: Response) => {
   try {
     const { chatId } = req.params;
-    const userId = (req as any).userId;
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
     await markMessagesAsRead(chatId, userId);
     return res.json({ success: true });
