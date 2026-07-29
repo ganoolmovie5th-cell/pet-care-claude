@@ -3,8 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { firestore, auth, isDemoMode } from '@/lib/firebase';
 import { DEMO_VETS } from '@/lib/demo-data';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
+import { collection, getDocs } from 'firebase/firestore';
 
 interface Vet {
   id: string;

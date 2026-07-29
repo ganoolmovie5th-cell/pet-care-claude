@@ -5,6 +5,8 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Pet Care Admin',
+  // Internal ops panel: keep it out of search results entirely.
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

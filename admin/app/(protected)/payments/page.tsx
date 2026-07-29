@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { firestore, isDemoMode } from '@/lib/firebase';
 import { DEMO_PAYMENTS } from '@/lib/demo-data';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 
 interface Payment {
   id: string;
