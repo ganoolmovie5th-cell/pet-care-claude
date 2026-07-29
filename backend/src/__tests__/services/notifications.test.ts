@@ -20,7 +20,7 @@ describe('Notifications Service', () => {
     });
 
     it('sets created_at timestamp', async () => {
-      await registerFCMToken('user-456', 'token-xyz', 'Android');
+      const docId = await registerFCMToken('user-456', 'token-xyz', 'Android');
       const doc = await db.collection('fcm_tokens').doc(docId).get();
       expect(doc.data()?.created_at).toBeDefined();
     });

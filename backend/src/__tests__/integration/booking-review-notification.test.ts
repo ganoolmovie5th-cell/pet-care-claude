@@ -19,7 +19,7 @@ describe('Integration: Booking → Review → Rating Update', () => {
   describe('Complete booking flow', () => {
     it('creates booking → confirms → sends SMS+FCM → owner reviews → vet rating updated', async () => {
       // 1. Create booking
-      const booking = await createBooking({
+      const bookingId = await createBooking({
         ownerId: mockData.ownerId,
         petId: mockData.petId,
         vetId: mockData.vetId,
@@ -30,11 +30,10 @@ describe('Integration: Booking → Review → Rating Update', () => {
         status: 'confirmed',
       });
 
-      expect(booking.id).toBeDefined();
-      expect(booking.status).toBe('confirmed');
+      expect(bookingId).toBeDefined();
 
       // 2. Fetch booking
-      const fetched = await getBookingById(booking.id);
+      const fetched = await getBookingById(bookingId);
       expect(fetched?.status).toBe('confirmed');
 
       // 3. Send confirmation notifications (SMS + FCM)
@@ -44,7 +43,7 @@ describe('Integration: Booking → Review → Rating Update', () => {
         mockData.petName,
         mockData.vetClinicName,
         mockData.date,
-        booking.id
+        bookingId
       );
 
       // Verify notification was saved
@@ -61,7 +60,7 @@ describe('Integration: Booking → Review → Rating Update', () => {
         reviewerId: mockData.ownerId,
         targetId: mockData.vetId,
         type: 'vet',
-        bookingId: booking.id,
+        bookingId: bookingId,
         rating: 5,
         text: 'Excellent vet, very professional!',
         verified: true,
@@ -130,7 +129,7 @@ describe('Integration: Booking → Review → Rating Update', () => {
 
   describe('Notification persistence', () => {
     it('stores booking confirmation notification with deeplink', async () => {
-      const booking = await createBooking({
+      const bookingId = await createBooking({
         ownerId: mockData.ownerId,
         petId: mockData.petId,
         vetId: mockData.vetId,
@@ -147,7 +146,7 @@ describe('Integration: Booking → Review → Rating Update', () => {
         mockData.petName,
         mockData.vetClinicName,
         mockData.date,
-        booking.id
+        bookingId
       );
 
       const notifs = await db
@@ -157,7 +156,7 @@ describe('Integration: Booking → Review → Rating Update', () => {
         .get();
 
       const notif = notifs.docs[notifs.docs.length - 1].data();
-      expect(notif.deeplink).toBe(`app://booking/${booking.id}`);
+      expect(notif.deeplink).toBe(`app://booking/${bookingId}`);
       expect(notif.sent_at).toBeDefined();
       expect(notif.read_at).toBeNull();
     });

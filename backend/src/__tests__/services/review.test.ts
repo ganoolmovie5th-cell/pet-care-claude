@@ -73,7 +73,7 @@ describe('Review Service', () => {
 
   describe('incrementHelpfulCount', () => {
     it('increments helpful_count field', async () => {
-      await createReview(mockReviewData);
+      const id = await createReview(mockReviewData);
       await incrementHelpfulCount(id);
       await incrementHelpfulCount(id);
 
@@ -82,7 +82,7 @@ describe('Review Service', () => {
     });
 
     it('updates updated_at timestamp', async () => {
-      await createReview(mockReviewData);
+      const id = await createReview(mockReviewData);
       const before = new Date().getTime();
       await incrementHelpfulCount(id);
       const after = new Date().getTime();

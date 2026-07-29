@@ -64,9 +64,9 @@ describe('Integration: Playdate Posting → Geo-Matching → Interest → Notifi
         'score'
       );
 
-      const matchFound = matches.some(m => m.id === postId);
+      const matchFound = matches.some(m => m.postId === postId);
       if (matchFound) {
-        const match = matches.find(m => m.id === postId);
+        const match = matches.find(m => m.postId === postId);
         expect(match?.distance_km).toBeLessThan(5);
         expect(match?.match_score).toBeGreaterThan(0);
       }
