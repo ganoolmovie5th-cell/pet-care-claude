@@ -1,19 +1,27 @@
 import express, { Router, Request, Response } from 'express';
 import { getVetRecommendations } from '../services/recommendations';
+import { getPetsByOwnerId } from '../services/health';
+import { authenticateToken } from '../middleware/auth';
 
 const router: Router = express.Router();
 
 // GET /recommendations/vets — Get recommended vets for owner
-router.get('/vets', async (req: Request, res: Response) => {
+router.get('/vets', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const { ownerId, lat, lng, petId, limit = '10' } = req.query;
+    const { lat, lng, petId, limit = '10' } = req.query;
+    const ownerId = req.userId!;
 
-    if (!ownerId || lat === undefined || lng === undefined || !petId) {
-      return res.status(400).json({ error: 'Missing required parameters: ownerId, lat, lng, petId' });
+    if (lat === undefined || lng === undefined || !petId) {
+      return res.status(400).json({ error: 'Missing required parameters: lat, lng, petId' });
+    }
+
+    const pets = await getPetsByOwnerId(ownerId);
+    if (!pets.some(p => p.id === petId)) {
+      return res.status(403).json({ error: 'Forbidden' });
     }
 
     const recommendations = await getVetRecommendations(
-      ownerId as string,
+      ownerId,
       parseFloat(lat as string),
       parseFloat(lng as string),
       petId as string,

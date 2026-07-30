@@ -3,12 +3,12 @@ import { createBooking, getBookingsByOwnerId } from '../services/booking';
 import { getVetById } from '../services/vet';
 import { getPetsByOwnerId } from '../services/health';
 import { sendBookingConfirmationSMS } from '../services/notifications';
+import { authenticateToken } from '../middleware/auth';
 import { db } from '../config/firebase';
 
 const router: Router = express.Router();
 
 interface CreateBookingRequest {
-  ownerId: string;
   petId: string;
   vetId: string;
   date: string;
@@ -16,12 +16,19 @@ interface CreateBookingRequest {
   notes?: string;
 }
 
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const { ownerId, petId, vetId, date, time, notes } = req.body as CreateBookingRequest;
+    const { petId, vetId, date, time, notes } = req.body as CreateBookingRequest;
+    const ownerId = req.userId!;
 
-    if (!ownerId || !petId || !vetId || !date || !time) {
+    if (!petId || !vetId || !date || !time) {
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const pets = await getPetsByOwnerId(ownerId);
+    const pet = pets.find(p => p.id === petId);
+    if (!pet) {
+      return res.status(403).json({ error: 'Forbidden' });
     }
 
     const bookingId = await createBooking({
@@ -43,10 +50,8 @@ router.post('/', async (req: Request, res: Response) => {
 
       if (phoneNumber) {
         const vetData = await getVetById(vetId);
-        const pets = await getPetsByOwnerId(ownerId);
-        const pet = pets.find(p => p.id === petId);
 
-        if (vetData && pet) {
+        if (vetData) {
           await sendBookingConfirmationSMS(
             phoneNumber,
             pet.name,
@@ -67,14 +72,16 @@ router.post('/', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/owner/:ownerId', async (req: Request, res: Response) => {
+router.get('/owner/:ownerId', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const { ownerId } = req.params;
-    const bookings = await getBookingsByOwnerId(ownerId);
-    res.json(bookings);
+    if (req.params.ownerId !== req.userId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const bookings = await getBookingsByOwnerId(req.userId);
+    return res.json(bookings);
   } catch (error) {
     console.error('Error fetching bookings:', error);
-    res.status(500).json({ error: 'Failed to fetch bookings' });
+    return res.status(500).json({ error: 'Failed to fetch bookings' });
   }
 });
 

@@ -8,12 +8,12 @@ import {
 } from '../services/review';
 import { getBookingById } from '../services/booking';
 import { getVetById } from '../services/vet';
+import { authenticateToken } from '../middleware/auth';
 import { db } from '../config/firebase';
 
 const router: Router = express.Router();
 
 interface CreateReviewRequest {
-  reviewerId: string;
   targetId: string;
   type: 'vet' | 'owner';
   bookingId?: string;
@@ -22,11 +22,12 @@ interface CreateReviewRequest {
 }
 
 // POST /reviews — Create review
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const { reviewerId, targetId, type, bookingId, rating, text } = req.body as CreateReviewRequest;
+    const { targetId, type, bookingId, rating, text } = req.body as CreateReviewRequest;
+    const reviewerId = req.userId!;
 
-    if (!reviewerId || !targetId || !type || !rating) {
+    if (!targetId || !type || !rating) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -127,7 +128,7 @@ router.get('/vets/:vetId/summary', async (req: Request, res: Response) => {
 });
 
 // POST /reviews/:reviewId/helpful — Upvote review
-router.post('/:reviewId/helpful', async (req: Request, res: Response) => {
+router.post('/:reviewId/helpful', authenticateToken, async (req: Request, res: Response) => {
   try {
     const { reviewId } = req.params;
 

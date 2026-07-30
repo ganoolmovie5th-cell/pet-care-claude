@@ -1,9 +1,12 @@
 import express, { Router, Request, Response } from 'express';
 import { createVet, getAllVets, getVetById, searchVets } from '../services/vet';
+import { authenticateToken } from '../middleware/auth';
 
 const router: Router = express.Router();
 
-router.post('/', async (req: Request, res: Response) => {
+// The GET routes below stay public on purpose: browsing the clinic directory is
+// what an unauthenticated visitor is meant to do. Creating one is not.
+router.post('/', authenticateToken, async (req: Request, res: Response) => {
   try {
     const { clinic_name, location, specialties, hours, rating, review_count, consultation_fee, phone, email } = req.body;
 

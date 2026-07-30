@@ -1,15 +1,18 @@
 import express, { Router, Request, Response } from 'express';
 import { logEvent, getDailyMetrics, getMetricsRange, logAnalyticsEvent } from '../services/analytics';
 import { enqueueAnalyticsTask } from '../queues/analyticsQueue';
+import { authenticateToken } from '../middleware/auth';
+import { adminAuth } from '../middleware/adminAuth';
 
 const router: Router = express.Router();
 
 const VALID_EVENT_TYPES = ['app_opened', 'booking_created', 'payment_completed', 'vet_viewed', 'dispute_opened'];
 const CRITICAL_EVENT_TYPES = ['payment_completed', 'dispute_opened'];
 
-router.post('/event', async (req: Request, res: Response) => {
+router.post('/event', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const { eventType, userId, vetId, metadata } = req.body;
+    const { eventType, vetId, metadata } = req.body;
+    const userId = req.userId!;
 
     if (!VALID_EVENT_TYPES.includes(eventType)) {
       return res.status(400).json({ error: 'Invalid event type' });
@@ -28,7 +31,7 @@ router.post('/event', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/metrics/daily/:date', async (req: Request, res: Response) => {
+router.get('/metrics/daily/:date', adminAuth, async (req: Request, res: Response) => {
   try {
     const { date } = req.params;
     const metrics = await getDailyMetrics(date);
@@ -39,7 +42,7 @@ router.get('/metrics/daily/:date', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/metrics/range', async (req: Request, res: Response) => {
+router.get('/metrics/range', adminAuth, async (req: Request, res: Response) => {
   try {
     const { startDate, endDate } = req.query;
 
@@ -55,15 +58,15 @@ router.get('/metrics/range', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/insurance-click', async (req: Request, res: Response) => {
+router.post('/insurance-click', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const { userId, providerName } = req.body;
+    const { providerName } = req.body;
 
-    if (!userId || !providerName) {
+    if (!providerName) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    await logEvent(userId, 'insurance_clicked', { providerName });
+    await logEvent(req.userId!, 'insurance_clicked', { providerName });
     return res.status(201).json({ success: true });
   } catch (error) {
     console.error('Error logging insurance click:', error);

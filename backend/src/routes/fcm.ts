@@ -4,11 +4,14 @@ import {
   getUserNotifications,
   markNotificationAsRead,
 } from '../services/notifications';
+import { authenticateToken } from '../middleware/auth';
+import { db } from '../config/firebase';
 
 const router: Router = express.Router();
 
+router.use(authenticateToken);
+
 interface RegisterTokenRequest {
-  userId: string;
   token: string;
   device: 'iOS' | 'Android';
 }
@@ -16,13 +19,13 @@ interface RegisterTokenRequest {
 // POST /fcm/register-token — Register FCM token
 router.post('/register-token', async (req: Request, res: Response) => {
   try {
-    const { userId, token, device } = req.body as RegisterTokenRequest;
+    const { token, device } = req.body as RegisterTokenRequest;
 
-    if (!userId || !token || !device) {
-      return res.status(400).json({ error: 'Missing required fields: userId, token, device' });
+    if (!token || !device) {
+      return res.status(400).json({ error: 'Missing required fields: token, device' });
     }
 
-    const tokenId = await registerFCMToken(userId, token, device);
+    const tokenId = await registerFCMToken(req.userId!, token, device);
     return res.status(201).json({ id: tokenId, message: 'Token registered' });
   } catch (error) {
     console.error('Error registering FCM token:', error);
@@ -33,14 +36,10 @@ router.post('/register-token', async (req: Request, res: Response) => {
 // GET /fcm/notifications — Get user notifications
 router.get('/notifications', async (req: Request, res: Response) => {
   try {
-    const { userId, unreadOnly = 'false', limit = '20', offset = '0' } = req.query;
-
-    if (!userId) {
-      return res.status(400).json({ error: 'Missing userId' });
-    }
+    const { unreadOnly = 'false', limit = '20', offset = '0' } = req.query;
 
     const result = await getUserNotifications(
-      userId as string,
+      req.userId!,
       unreadOnly === 'true',
       parseInt(limit as string, 10),
       parseInt(offset as string, 10)
@@ -57,6 +56,11 @@ router.get('/notifications', async (req: Request, res: Response) => {
 router.patch('/notifications/:notificationId/read', async (req: Request, res: Response) => {
   try {
     const { notificationId } = req.params;
+
+    const doc = await db.collection('user_notifications').doc(notificationId).get();
+    if (!doc.exists || doc.data()?.userId !== req.userId) {
+      return res.status(404).json({ error: 'Notification not found' });
+    }
 
     await markNotificationAsRead(notificationId);
     return res.json({ message: 'Notification marked as read' });

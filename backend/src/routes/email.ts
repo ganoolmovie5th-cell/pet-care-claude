@@ -5,8 +5,14 @@ import {
   sendSubscriptionReminder,
   sendSubscriptionOverdue,
 } from '../services/email';
+import { adminAuth } from '../middleware/adminAuth';
 
 const router = Router();
+
+// Every endpoint here takes the recipient address from the request, so without
+// a guard this router is an open mail relay. These are triggered by our own
+// jobs, never by an end user, hence admin rather than owner auth.
+router.use(adminAuth);
 
 router.post('/booking-confirmation', async (req: Request, res: Response) => {
   const { ownerId, ownerEmail, booking } = req.body;

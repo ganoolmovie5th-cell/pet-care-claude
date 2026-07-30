@@ -13,14 +13,24 @@ jest.mock('@sendgrid/mail', () => ({
 }));
 
 import app from '../src/index';
+import { auth } from '../src/config/firebase';
 import sgMail from '@sendgrid/mail';
 
-beforeEach(() => jest.clearAllMocks());
+const ADMIN_HEADER = 'Bearer admin-token';
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  (auth.verifyIdToken as jest.Mock).mockResolvedValue({
+    uid: 'admin-1',
+    customClaims: { admin: true },
+  });
+});
 
 describe('POST /email/booking-confirmation', () => {
   it('sends booking confirmation and returns success', async () => {
     const res = await request(app)
       .post('/email/booking-confirmation')
+      .set('Authorization', ADMIN_HEADER)
       .send({
         ownerId: 'owner-1',
         ownerEmail: 'owner@example.com',
@@ -34,12 +44,34 @@ describe('POST /email/booking-confirmation', () => {
     expect(msg.to).toBe('owner@example.com');
     expect(msg.subject).toContain('Booking Confirmed');
   });
+
+  it('rejects a non-admin caller with 403', async () => {
+    (auth.verifyIdToken as jest.Mock).mockResolvedValue({ uid: 'owner-1', customClaims: {} });
+
+    const res = await request(app)
+      .post('/email/booking-confirmation')
+      .set('Authorization', 'Bearer owner-token')
+      .send({ ownerEmail: 'owner@example.com', booking: { id: 'b-1' } });
+
+    expect(res.status).toBe(403);
+    expect(sgMail.send).not.toHaveBeenCalled();
+  });
+
+  it('rejects an unauthenticated caller with 401', async () => {
+    const res = await request(app)
+      .post('/email/booking-confirmation')
+      .send({ ownerEmail: 'owner@example.com', booking: { id: 'b-1' } });
+
+    expect(res.status).toBe(401);
+    expect(sgMail.send).not.toHaveBeenCalled();
+  });
 });
 
 describe('POST /email/payment-receipt', () => {
   it('sends payment receipt and returns success', async () => {
     const res = await request(app)
       .post('/email/payment-receipt')
+      .set('Authorization', ADMIN_HEADER)
       .send({
         vetEmail: 'vet@example.com',
         invoice: { id: 'inv-1', amount: 150000, currency: 'IDR', description: 'Consultation', date: '2026-07-24' },
@@ -58,6 +90,7 @@ describe('POST /email/subscription-reminder', () => {
   it('sends subscription reminder and returns success', async () => {
     const res = await request(app)
       .post('/email/subscription-reminder')
+      .set('Authorization', ADMIN_HEADER)
       .send({ vetEmail: 'vet@example.com', vetName: 'Dr. Siti', daysUntilExpiry: 7 });
 
     expect(res.status).toBe(200);

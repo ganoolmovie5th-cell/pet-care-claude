@@ -1,15 +1,16 @@
 import express, { Router, Request, Response } from 'express';
 import { createPaymentInvoice, getInvoiceById, getInvoiceByBookingId, updateInvoiceStatus } from '../services/payment';
 import { updatePaymentStatus } from '../services/booking';
+import { authenticateToken } from '../middleware/auth';
 
 const router: Router = express.Router();
 
-router.post('/create-invoice', async (req: Request, res: Response) => {
+router.post('/create-invoice', authenticateToken, async (req: Request, res: Response) => {
   try {
     const { bookingId, amount, description } = req.body;
-    const userId = req.user?.uid;
+    const userId = req.userId!;
 
-    if (!bookingId || !amount || !userId) {
+    if (!bookingId || !amount) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -21,12 +22,14 @@ router.post('/create-invoice', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/invoice/:invoiceId', async (req: Request, res: Response) => {
+router.get('/invoice/:invoiceId', authenticateToken, async (req: Request, res: Response) => {
   try {
     const { invoiceId } = req.params;
     const invoice = await getInvoiceById(invoiceId);
 
-    if (!invoice) {
+    // Someone else's invoice is reported as missing rather than forbidden, so
+    // the endpoint cannot be used to probe which invoice ids exist.
+    if (!invoice || invoice.userId !== req.userId) {
       return res.status(404).json({ error: 'Invoice not found' });
     }
 
@@ -37,12 +40,12 @@ router.get('/invoice/:invoiceId', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/booking/:bookingId/status', async (req: Request, res: Response) => {
+router.get('/booking/:bookingId/status', authenticateToken, async (req: Request, res: Response) => {
   try {
     const { bookingId } = req.params;
     const invoice = await getInvoiceByBookingId(bookingId);
 
-    if (!invoice) {
+    if (!invoice || invoice.userId !== req.userId) {
       return res.status(404).json({ error: 'No payment found for this booking' });
     }
 
@@ -53,8 +56,15 @@ router.get('/booking/:bookingId/status', async (req: Request, res: Response) => 
   }
 });
 
+// Called by Xendit, not by our clients, so it authenticates with the callback
+// token from the Xendit dashboard instead of a user bearer token.
 router.post('/xendit-webhook', async (req: Request, res: Response) => {
   try {
+    const expectedToken = process.env.XENDIT_CALLBACK_TOKEN;
+    if (!expectedToken || req.headers['x-callback-token'] !== expectedToken) {
+      return res.status(401).json({ error: 'Invalid callback token' });
+    }
+
     const { external_id, status, paid_at } = req.body;
 
     if (!external_id || !status) {
