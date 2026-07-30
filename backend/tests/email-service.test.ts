@@ -101,3 +101,31 @@ describe('POST /email/subscription-reminder', () => {
     expect(msg.subject).toContain('7 days');
   });
 });
+
+describe('POST /email/subscription-overdue', () => {
+  it('sends the overdue notice and returns success', async () => {
+    const res = await request(app)
+      .post('/email/subscription-overdue')
+      .set('Authorization', ADMIN_HEADER)
+      .send({ vetEmail: 'vet@example.com', vetName: 'Dr. Siti' });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ success: true });
+    const msg = (sgMail.send as jest.Mock).mock.calls[0][0];
+    expect(msg.to).toBe('vet@example.com');
+    expect(msg.subject).toBe('Your Pet Care subscription is overdue');
+    expect(msg.text).toContain('Dr. Siti');
+  });
+
+  it('rejects a non-admin caller with 403', async () => {
+    (auth.verifyIdToken as jest.Mock).mockResolvedValue({ uid: 'owner-1', customClaims: {} });
+
+    const res = await request(app)
+      .post('/email/subscription-overdue')
+      .set('Authorization', 'Bearer owner-token')
+      .send({ vetEmail: 'vet@example.com', vetName: 'Dr. Siti' });
+
+    expect(res.status).toBe(403);
+    expect(sgMail.send).not.toHaveBeenCalled();
+  });
+});
