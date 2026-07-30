@@ -148,8 +148,10 @@ reminders/{reminderId}
 1. User enters +62-based phone number
 2. Firebase Auth sends 6-digit OTP via SMS
 3. User enters OTP, gets Firebase ID token
-4. Backend `/auth/verify-token` exchanges ID token for JWT (7-day + refresh)
-5. Frontend stores JWT in localStorage, includes in all API requests
+4. Backend `/auth/verify-token` verifies the ID token and provisions the user doc
+5. Clients send the Firebase ID token as `Authorization: Bearer <idToken>` on every
+   API request; `middleware/auth.ts` verifies it and sets `req.userId`. The Firebase
+   SDK owns refresh, so there is no app-issued token to store.
 
 **Email (Vets):**
 TBD post-MVP — placeholder for web dashboard login

@@ -1,5 +1,4 @@
 import express, { Router, Request, Response } from 'express';
-import * as crypto from 'crypto';
 import { auth } from '../config/firebase';
 import { createOrUpdateUser } from '../services/user';
 
@@ -8,20 +7,6 @@ const router: Router = express.Router();
 interface VerifyTokenRequest {
   idToken: string;
 }
-
-const generateJWT = (userId: string): string => {
-  const payload = {
-    userId,
-    iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
-  };
-  const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64');
-  const secret = process.env.JWT_SECRET || 'dev-secret-key';
-  const hmac = crypto.createHmac('sha256', secret);
-  hmac.update(`${Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64')}.${encodedPayload}`);
-  const signature = hmac.digest('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-  return `${Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64')}.${encodedPayload}.${signature}`;
-};
 
 router.post('/verify-token', async (req: Request, res: Response) => {
   try {
@@ -40,13 +25,9 @@ router.post('/verify-token', async (req: Request, res: Response) => {
       flagged: false,
     });
 
-    const jwt = generateJWT(userId);
-
-    return res.json({
-      token: jwt,
-      expiresIn: '7d',
-      userId,
-    });
+    // The client keeps using the Firebase ID token; this endpoint only
+    // provisions the user document.
+    return res.json({ userId });
   } catch (error) {
     console.error('Token verification error:', error);
     return res.status(401).json({
