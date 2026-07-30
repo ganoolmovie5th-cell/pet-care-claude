@@ -1,8 +1,14 @@
-import axios from 'axios';
+// Factory mock so jest never parses the real module: it uses import.meta.env,
+// which the CJS test transform cannot handle.
+jest.mock('../services/api', () => ({
+  __esModule: true,
+  default: { post: jest.fn() },
+}));
+
+import api from '../services/api';
 import { useAnalytics, readQueue, writeQueue } from '../hooks/use-analytics';
 
-jest.mock('axios');
-const mockedPost = jest.spyOn(axios, 'post');
+const mockedPost = api.post as jest.Mock;
 
 beforeEach(() => {
   localStorage.clear();
@@ -20,7 +26,7 @@ test('logEvent writes event to localStorage queue', () => {
 });
 
 test('flushEvents sends queued events via POST and clears queue', async () => {
-  mockedPost.mockResolvedValueOnce({ status: 200 });
+  mockedPost.mockResolvedValue({ status: 200 });
 
   const { logEvent, flushEvents } = useAnalytics();
   logEvent('booking_created', { bookingId: 'b1' });
@@ -28,10 +34,11 @@ test('flushEvents sends queued events via POST and clears queue', async () => {
 
   await flushEvents();
 
-  expect(mockedPost).toHaveBeenCalledWith(
-    'http://localhost:5000/analytics/event',
-    expect.objectContaining({ events: expect.arrayContaining([expect.objectContaining({ type: 'booking_created' })]) }),
-  );
+  expect(mockedPost).toHaveBeenCalledTimes(2);
+  expect(mockedPost).toHaveBeenCalledWith('/analytics/event', {
+    eventType: 'booking_created',
+    metadata: { bookingId: 'b1' },
+  });
   expect(readQueue()).toHaveLength(0);
 });
 
@@ -44,4 +51,22 @@ test('flushEvents retains queue on POST failure for retry', async () => {
   await flushEvents();
 
   expect(readQueue()).toHaveLength(1);
+});
+
+test('flushEvents drops only accepted events when a later POST fails', async () => {
+  mockedPost
+    .mockResolvedValueOnce({ status: 200 })
+    .mockRejectedValueOnce(new Error('network error'));
+
+  writeQueue([
+    { type: 'booking_created', metadata: {}, timestamp: Date.now() },
+    { type: 'vet_viewed', metadata: {}, timestamp: Date.now() },
+  ]);
+
+  const { flushEvents } = useAnalytics();
+  await flushEvents();
+
+  const queue = readQueue();
+  expect(queue).toHaveLength(1);
+  expect(queue[0].type).toBe('vet_viewed');
 });
