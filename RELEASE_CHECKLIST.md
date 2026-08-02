@@ -10,7 +10,7 @@
 
 ### Security
 - [ ] `.env` vars never committed
-- [ ] API keys rotated (Xendit, Twilio, JWT_SECRET)
+- [ ] API keys rotated (Xendit, Twilio, XENDIT_CALLBACK_TOKEN)
 - [ ] Firestore security rules reviewed
 - [ ] No hardcoded credentials in code
 - [ ] CORS configured properly

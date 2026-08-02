@@ -61,7 +61,7 @@ docs/
 - All routes in `src/routes/` (auth, vets, bookings, health, playdate, payments)
 - All services in `src/services/` (business logic separate from routes)
 - Firebase config in `src/config/firebase.ts` (initialized once)
-- Middleware in `src/middleware/auth.ts` (JWT verification)
+- Middleware in `src/middleware/auth.ts` (Firebase ID token verification)
 - Cloud Functions in `src/functions/` (async jobs: bookings, reminders, webhooks)
 
 ### Web Dashboard Tasks

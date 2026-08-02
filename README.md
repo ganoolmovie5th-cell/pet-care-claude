@@ -36,7 +36,7 @@ pet-care-claude/
 │   │   │   └── payments.ts     # Xendit webhook
 │   │   ├── services/           # Business logic
 │   │   ├── middleware/
-│   │   │   └── auth.ts         # JWT verification
+│   │   │   └── auth.ts         # Firebase ID token verification
 │   │   ├── functions/          # Cloud Functions
 │   │   ├── types/
 │   │   └── utils/
@@ -199,7 +199,7 @@ Deploy commands TBD after MVP launch.
 ## Security & Compliance
 
 - Phone OTP auth (6-digit, 10-min expiry)
-- JWT sessions (7-day + refresh)
+- Firebase ID token sessions (SDK-managed refresh)
 - Firestore security rules (owner isolation, role-based access)
 - Xendit payment gateway (PCI-DSS)
 - PDP compliance (privacy policy, user consent)

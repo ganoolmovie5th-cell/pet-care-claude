@@ -100,24 +100,24 @@ Setiap task dijalankan oleh fresh subagent, diikuti review checkpoint.
 - [ ] Create `src/routes/auth.ts`: `POST /auth/verify-token` endpoint
   - Input: `idToken` (Firebase ID token from mobile)
   - Verify token with Firebase Admin SDK
-  - Generate JWT (7-day expiry, include userId)
-  - Return: `{ token, expiresIn, refreshToken }`
+  - Provision the user document on first sight
+  - Return: `{ userId }`
   - Error handling: 400 (missing token), 401 (invalid token)
-- [ ] Create `src/middleware/auth.ts`: JWT verification middleware
-  - Extract token from `Authorization: Bearer <token>`
-  - Verify JWT signature
+- [ ] Create `src/middleware/auth.ts`: Firebase ID token verification middleware
+  - Extract token from `Authorization: Bearer <idToken>`
+  - Verify it with `auth.verifyIdToken`
   - Set `req.userId` for downstream routes
 - [ ] Modify `src/index.ts`: Mount `auth.ts` routes, apply auth middleware to protected routes
 - [ ] Create `__tests__/auth.test.ts`: Unit tests for `/verify-token` endpoint (missing token, invalid token, valid token)
 - [ ] Run `npm test` to verify tests pass
-- [ ] Commit: `feat: backend phone OTP auth with Firebase and JWT`
+- [ ] Commit: `feat: backend phone OTP auth with Firebase`
 
 ---
 
 **Gate Checkpoint (after Task 4):**
 - [ ] Mobile app: Phone → OTP → Dashboard screens render without crash
-- [ ] Backend: `POST /auth/verify-token` returns valid JWT for valid Firebase ID token
-- [ ] Integration: Mobile OTP → backend JWT exchange works end-to-end
+- [ ] Backend: `POST /auth/verify-token` returns the userId for a valid Firebase ID token
+- [ ] Integration: Mobile OTP → ID token sent as bearer on API calls works end-to-end
 - [ ] Tests: All auth tests passing
 - [ ] No console errors in mobile or backend logs
 
