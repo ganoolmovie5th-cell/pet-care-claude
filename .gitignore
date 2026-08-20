@@ -6,3 +6,7 @@ dist/
 package-lock.json
 *.tsbuildinfo
 .vercel
+
+# AI IDE config
+.kiro/
+.claude/
