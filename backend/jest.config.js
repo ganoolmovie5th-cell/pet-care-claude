@@ -15,6 +15,7 @@ module.exports = {
   // paths the fake does not model yet); run them under `firebase emulators:exec`.
   testPathIgnorePatterns: [
     '/node_modules/',
+    '/dist/',
     // Shared fakes, not suites — testMatch globs the whole __tests__ tree.
     '<rootDir>/src/__tests__/helpers/',
     '<rootDir>/src/__tests__/integration/booking-review-notification.test.ts',
